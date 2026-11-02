@@ -1,9 +1,9 @@
-# FHI, SSB og Udir – spørringer til Power BI
+# FHI, SSB, Udir og Vegvesenet – spørringer til Power BI
 
 Dette prosjektet tar utgangspunkt i https://github.com/janhli/FHI-API-Query-Builder,
 lastet ned fra `main` 2. november 2026. Originalens kode, dokumentasjon og
 MIT-lisens er beholdt. Se `README.md` og `LICENSE`.
-Den lokale løsningen har i tillegg egne deler for SSB og Udir.
+Den lokale løsningen har i tillegg egne deler for SSB, Udir og Statens vegvesen.
 
 ## Start
 
@@ -20,7 +20,8 @@ Ingen ekstra Python-pakker er nødvendige.
 
 ## Bruk
 
-Velg **FHI · Folkehelse**, **SSB · Statistikkbanken** eller **Udir · Utdanning** i toppmenyen.
+Velg **FHI · Folkehelse**, **SSB · Statistikkbanken**, **Udir · Utdanning**
+eller **Vegvesenet · Trafikkdata** i toppmenyen.
 Utvalget i hver del beholdes når du bytter mellom dem.
 
 ### FHI
@@ -130,6 +131,57 @@ Skriptet henter kun offentlige tabell- og filtermetadata. Du committer og
 pusher de oppdaterte filene selv. Gyldighet av filterkombinasjoner avgjøres
 av Udir når spørringen kjøres; filtre kan variere mellom skoleår og skoler.
 
+### Vegvesenet – trafikkdata til Power BI
+
+1. Velg **Vegvesenet · Trafikkdata**. Søk etter målestasjon, ID, vegnummer,
+   kommune eller fylke. Søk på `E6` finner også vegreferanser skrevet `EV6`.
+2. Avgrens eventuelt til fylke, motorkjøretøy/sykkel og stasjoner i drift.
+   Velg mellom 1 og 20 stasjoner. Stasjonsstatus og datatilgjengelighet er
+   basert på den lagrede oversikten, ikke et live oppslag på nettsiden.
+3. Velg datatype: trafikkmengde per time, per døgn, gjennomsnittlig
+   døgntrafikk per måned, eller årsdøgntrafikk (ÅDT).
+4. Velg periode og lag Power Query-kode. Kopier til en tom spørring i
+   Power BI via **Avansert redigering**. Velg **Anonym** som autentisering
+   til `https://trafikkdata-api.atlas.vegvesen.no/`.
+
+Datoer er norske kalenderdager, inklusive til-datoen. Sommer-/vintertid
+håndteres i datogrensene. Tidspunktene i resultatet beholdes som
+`datetimezone`. Datointervallet er fast i den genererte koden; juster
+perioden ved behov for et nytt uttrekk.
+
+Time- og døgndata hentes med cursor-basert sideinndeling, maksimalt 100
+intervaller per API-side. Koden fortsetter til siste side og avbryter ved
+GraphQL-feil eller en sidepeker som ikke går videre. Ved månedsdata kjøres
+et kall for hvert valgt år; ÅDT henter tilgjengelige år og filtrerer til
+årsintervallet. Alle valgte stasjoner blir med.
+
+Resultatet er en flat tabell med stasjon, ID, veg, fylke, kommune,
+trafikktype og tidsperiode. `Passeringer` brukes for time-/døgntall og
+`Gjennomsnitt_per_doegn` for måneds-/årsgjennomsnitt. ÅDT og månedlige
+døgnsnitt er **ikke summer for året eller måneden**. Gjennomsnittene
+omfatter alle dager (`dayType: ALL`). Uttrekket er totalen for stasjonen,
+ikke oppdelt etter retning, kjørefelt eller kjøretøylengde.
+
+`Dekningsgrad_prosent` og eventuelle konfidensintervaller (`KI_nedre`,
+`KI_oevre`) følger med. Manglende målinger beholdes som `null`, ikke 0.
+API-et kan mangle måneder, år eller deler av en periode. Koden fyller
+ikke inn oppdiktede målinger for manglende perioder.
+
+Feltet **GraphQL / JSON** viser et POST-eksempel for første stasjon og
+første side/år. Bruk Power Query-koden for det komplette utvalget.
+Forhåndsvisning skjer i Power BI. **Last ned M-kode** lagrer samme kode
+som en `.pq`-fil.
+
+Oppdater stasjonsoversikten lokalt ved behov:
+
+```powershell
+python scripts/update_vegvesen_metadata.py
+```
+
+Du committer og pusher selv hele `data/vegvesen/` sammen med kodeendringene.
+Dataene distribueres av Statens vegvesen under NLOD. Se
+[API-dokumentasjonen](https://trafikkdata.atlas.vegvesen.no/om-api).
+
 ### Prosjektfiler
 
 - `API-powerbi.py` starter en lokal server, bundet til 127.0.0.1, med riktige
@@ -139,6 +191,8 @@ av Udir når spørringen kjøres; filtre kan variere mellom skoleår og skoler.
   API- og eksportlogikk i `js/lib/ssb.mjs` og egne tester i `ssb.test.mjs`.
 - Udir-del i `js/components/UdirBuilder.mjs` og `js/lib/udir.mjs`, med
   publiserbare filtermetadata i `data/udir/`.
+- Vegvesenet-del i `js/components/VegvesenBuilder.mjs` og `js/lib/vegvesen.mjs`,
+  med publiserbar stasjonsoversikt i `data/vegvesen/`.
 
 ## Publisere på GitHub Pages
 
