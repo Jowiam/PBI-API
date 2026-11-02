@@ -1,5 +1,6 @@
 import { TRAFFIC_API, TRAFFIC_MODES, addDays, validateTrafficOptions, trafficRequest, trafficPowerQuery, readTrafficStations } from '../lib/vegvesen.mjs';
 import { normalizeSearch } from '../lib/searchSynonyms.mjs';
+import { trafficRCode, downloadRScript } from '../lib/rCode.mjs';
 
 const { createElement: h, useState, useEffect, useMemo, useRef } = React;
 const button = (label, onClick, disabled = false, primary = false) => h('button', { type: 'button', className: 'btn ' + (primary ? 'btn-primary' : 'btn-outline'), onClick, disabled }, label);
@@ -64,6 +65,8 @@ export function VegvesenBuilder() {
         }
     } catch (err) { validation = err.message; }
     const intervalMode = options.mode === 'hour' || options.mode === 'day';
+    const rCode = step === 3 && !validation ? trafficRCode(selected, options) : '';
+    const displayCode = output === 'r' ? rCode : output === 'm' ? code : JSON.stringify(request, null, 2);
     function toggle(point) {
         setNotice('');
         setSelectedIds(prev => prev.includes(point.id) ? prev.filter(id => id !== point.id) : [...prev, point.id]);
@@ -79,7 +82,7 @@ export function VegvesenBuilder() {
     }
     function update(key, value) { setOptions(prev => ({ ...prev, [key]: value })); }
     async function copy() {
-        try { await navigator.clipboard.writeText(output === 'm' ? code : JSON.stringify(request, null, 2)); setNotice('Kopiert til utklippstavlen.'); }
+        try { await navigator.clipboard.writeText(displayCode); setNotice('Kopiert til utklippstavlen.'); }
         catch { setNotice('Marker teksten i kodefeltet og kopier manuelt.'); }
     }
     function download() {
@@ -100,14 +103,14 @@ export function VegvesenBuilder() {
         h('main', { className: 'container' },
             h('header', { className: 'ssb-header' },
                 h('p', { className: 'ssb-eyebrow' }, 'STATENS VEGVESEN'),
-                h('h1', null, 'Trafikkdata · Spørringer til Power BI'),
+                h('h1', null, 'Trafikkdata · Spørringer til Power BI og R'),
                 h('p', { className: 'text-gray-600' }, 'Finn målestasjoner og hent trafikkmengde, dekningsgrad og årsdøgntrafikk.')),
             h('nav', { className: 'ssb-steps', 'aria-label': 'Trinn i Vegvesen-spørring' },
-                ['Velg målestasjoner', 'Velg data og periode', 'Kopier til Power BI'].map((label, index) => h('button', {
+                ['Velg målestasjoner', 'Velg data og periode', 'Hent kode'].map((label, index) => h('button', {
                     key: label, type: 'button', className: step === index + 1 ? 'active' : '', 'aria-current': step === index + 1 ? 'step' : undefined,
                     disabled: busy || (index > 0 && !selected.length) || (index === 2 && Boolean(validation)), onClick: () => setStep(index + 1)
                 }, h('span', null, index + 1), label))),
-            catalog && h('p', { className: 'udir-intro' }, 'Data hentes direkte fra Vegvesenet i Power BI. Stasjonsoversikten ble hentet ' + date(catalog.fetchedAt) + '.'),
+            catalog && h('p', { className: 'udir-intro' }, 'Data hentes direkte fra Vegvesenet i Power BI eller R. Stasjonsoversikten ble hentet ' + date(catalog.fetchedAt) + '.'),
             busy && h('p', { role: 'status', className: 'ssb-message' }, 'Laster målestasjoner …'),
             error && h('div', { role: 'alert', className: 'ssb-message ssb-error' }, error, button('Prøv igjen', () => setAttempt(prev => prev + 1))),
             notice && h('p', { role: 'status', className: 'ssb-message' }, notice),
@@ -160,20 +163,22 @@ export function VegvesenBuilder() {
                     h('p', { className: 'text-sm' }, 'Dekningsgrad følger med i resultatet. Manglende målinger beholdes som null; de erstattes ikke med 0. Stasjoner kan ha avbrudd eller mangle data i valgt periode.'),
                     selected.length > 20 && h('p', { className: 'text-sm' }, 'Mange valgte stasjoner gir flere API-kall og kan bruke lengre tid i Power BI.'),
                     validation && h('p', { className: 'ssb-validation', role: 'status' }, validation)),
-                h('div', { className: 'ssb-actions' }, button('Endre målestasjoner', () => setStep(1)), button('Lag Power Query-kode →', () => setStep(3), Boolean(validation), true))),
+                h('div', { className: 'ssb-actions' }, button('Endre målestasjoner', () => setStep(1)), button('Lag Power Query-kode →', () => { setOutput('m'); setStep(3); }, Boolean(validation), true),
+                    button('Lag R-kode →', () => { setOutput('r'); setStep(3); }, Boolean(validation)))),
             step === 3 && code && h('section', { className: 'card' },
-                h('h2', { tabIndex: -1, ref: heading }, 'Spørringen er klar for Power BI'),
+                h('h2', { tabIndex: -1, ref: heading }, output === 'r' ? 'Spørringen er klar for R' : 'Spørringen er klar for Power BI'),
                 h('p', { className: 'text-gray-600' }, selected.length + ' målestasjoner · ' + TRAFFIC_MODES[options.mode]),
-                h('ol', { className: 'udir-instructions' }, h('li', null, 'I Power BI: Transformer data → Ny kilde → Tom spørring.'),
+                output !== 'r' && h('ol', { className: 'udir-instructions' }, h('li', null, 'I Power BI: Transformer data → Ny kilde → Tom spørring.'),
                     h('li', null, 'Lim koden inn i Avansert redigering.'), h('li', null, 'Velg Anonym som autentisering til ' + TRAFFIC_API)),
+                output === 'r' && h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Lim koden inn i R eller RStudio. Installer httr2 og jsonlite én gang, som vist øverst i skriptet. Alle valgte stasjoner og sider hentes til data (data.frame), med dekningsgrad og norske tidspunkter.'),
                 h('div', { className: 'ssb-output-tabs', role: 'group', 'aria-label': 'Vegvesen-kodeformat' },
-                    [['m', 'Power Query (komplett uttrekk)'], ['json', 'GraphQL / JSON']].map(([key, label]) => h('button', { key, type: 'button', className: output === key ? 'active' : '', 'aria-pressed': output === key, onClick: () => setOutput(key) }, label))),
+                    [['m', 'Power Query (komplett uttrekk)'], ['r', 'R-skript (komplett uttrekk)'], ['json', 'GraphQL / JSON']].map(([key, label]) => h('button', { key, type: 'button', className: output === key ? 'active' : '', 'aria-pressed': output === key, onClick: () => setOutput(key) }, label))),
                 output === 'json' && h('p', { className: 'text-sm text-gray-600' }, 'POST ' + TRAFFIC_API + ' · Eksempel for første stasjon og første side/år. Power Query-koden henter hele utvalget.'),
-                h('textarea', { className: 'ssb-code', value: output === 'm' ? code : JSON.stringify(request, null, 2), readOnly: true, rows: 18, spellCheck: false,
+                h('textarea', { className: 'ssb-code', value: displayCode, readOnly: true, rows: 18, spellCheck: false,
                     'aria-label': 'Generert Vegvesen-spørring', onFocus: event => event.target.select() }),
-                h('div', { className: 'ssb-actions' }, button(output === 'm' ? 'Kopier Power Query-kode' : 'Kopier GraphQL / JSON', copy, false, true),
-                    button('Last ned M-kode', download), button('Endre periode', () => setStep(2)), button('Endre stasjoner', () => setStep(1))),
-                h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Power Query henter alle valgte stasjoner og følger alle sidepekere for time- og døgndata. Dekningsgrad og eventuelle konfidensintervaller følger med. Forhåndsvis data i Power BI.')),
+                h('div', { className: 'ssb-actions' }, button(output === 'r' ? 'Kopier R-kode' : output === 'm' ? 'Kopier Power Query-kode' : 'Kopier GraphQL / JSON', copy, false, true),
+                    output === 'r' ? button('Last ned R-skript', () => downloadRScript(rCode, 'vegvesen-trafikkdata')) : button('Last ned M-kode', download), button('Endre periode', () => setStep(2)), button('Endre stasjoner', () => setStep(1))),
+                h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Power Query- og R-koden henter alle valgte stasjoner og følger alle sidepekere for time- og døgndata. Dekningsgrad og eventuelle konfidensintervaller følger med.')),
             h('footer', { className: 'ssb-footer text-sm text-gray-600' }, h('p', null, 'Inneholder data distribuert av Statens vegvesen under Norsk lisens for offentlige data (NLOD). Ta hensyn til dekningsgrad ved bruk av tallene.'),
                 h('a', { href: 'https://trafikkdata.atlas.vegvesen.no/om-api', target: '_blank', rel: 'noopener noreferrer' }, 'Om Trafikkdata-API-et ↗')))
     );

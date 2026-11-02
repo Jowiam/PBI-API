@@ -331,6 +331,11 @@
         .dimension-card .space-y-2 > * + * { margin-top: 0.3rem; }
         .dimension-card .space-y-4 > * + * { margin-top: 0.3rem; }
 
+        .overflow-auto {
+            overflow: auto;
+            min-width: 0;
+        }
+
         .overflow-y-auto {
             overflow-y: auto;
         }

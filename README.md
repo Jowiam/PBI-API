@@ -1,8 +1,8 @@
-# PBI-API – offentlige data til Power BI
+# PBI-API – offentlige data til Power BI og R
 
 Et nettbasert verktøy som gjør det enklere å finne offentlige data og lage
-spørringer til **Power BI**. Velg datakilde, tabell eller målestasjon og
-ønsket utvalg, og kopier ferdig **Power Query-kode (M)**. Du trenger ikke
+spørringer til **Power BI og R**. Velg datakilde, tabell eller målestasjon og
+ønsket utvalg, og kopier ferdig **Power Query-kode (M)** eller et **R-skript**. Du trenger ikke
 skrive API-kallene selv.
 
 **[Åpne verktøyet](https://jowiam.github.io/PBI-API/)** ·
@@ -36,6 +36,33 @@ bruke Power Query-koden. De øvrige kildene velger format gjennom kodegeneratore
 
 Power Query-koden kan også brukes i Excel der Power Query er tilgjengelig.
 Udir og Vegvesenet har en knapp for å laste ned M-koden som en `.pq`-fil.
+
+## Hent data til R
+
+Alle fire datakildene kan generere et komplett R-skript med det samme utvalget
+som du har valgt på nettsiden.
+
+1. Velg tabell eller stasjoner og tilpass filtrene.
+2. Velg **Lag R-kode →**, eller **R-skript** i resultatvisningen.
+3. Velg **Kopier R-kode** eller **Last ned R-skript** for å få en `.R`-fil.
+4. Lim koden inn i et R-skript i R/RStudio og kjør den. Installer pakkene
+   én gang ved behov:
+
+```r
+install.packages(c("httr2", "jsonlite"))
+```
+
+Resultatet ligger i en **data.frame kalt `data`**. Skriptet henter data direkte
+fra API-et når du kjører det. R trengs bare på maskinen som kjører skriptet;
+nettsiden fungerer fortsatt på GitHub Pages.
+
+Udir henter alle sider og kontrollerer radantallet. Vegvesenet henter alle
+valgte stasjoner og sider/år. FHI og SSB leser CSV med koder og originale
+verdier som tekst og legger til en numerisk `_tall`-kolonne for verdifeltet.
+FHI velger CSV-format automatisk for R. Udir kan også legge til numeriske
+`_tall`-kolonner. Manglende eller prikkede verdier blir `NA` i tallkolonnene;
+originalfeltene beholdes. Vegvesenets tidspunkter leses som `POSIXct` med
+tidssonen `Europe/Oslo`.
 
 ## Finne og velge data
 

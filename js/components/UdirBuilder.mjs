@@ -1,4 +1,5 @@
 import { udirDimensions, udirInitialConfig, buildUdirFilter, udirDataURL, udirPowerQuery, readUdirMetadata } from '../lib/udir.mjs';
+import { udirRCode, downloadRScript } from '../lib/rCode.mjs';
 
 const { createElement: h, useState, useEffect, useRef } = React;
 const count = value => value.toLocaleString('nb-NO');
@@ -102,10 +103,12 @@ export function UdirBuilder() {
     }
     const url = selected && filter ? udirDataURL(selected.id, filter) : '';
     const code = selected && filter ? udirPowerQuery(selected.id, filter, numeric) : '';
+    const rCode = selected && filter ? udirRCode(selected.id, filter, numeric) : '';
+    const displayCode = output === 'r' ? rCode : output === 'm' ? code : url;
     // Keep GET selections reasonably short; Udir does not expose a POST equivalent.
     const tooLong = url.length > 7500;
     async function copy() {
-        try { await navigator.clipboard.writeText(output === 'm' ? code : url); setNotice('Kopiert til utklippstavlen.'); }
+        try { await navigator.clipboard.writeText(displayCode); setNotice('Kopiert til utklippstavlen.'); }
         catch { setNotice('Marker teksten i kodefeltet og kopier manuelt.'); }
     }
     function download() {
@@ -123,14 +126,14 @@ export function UdirBuilder() {
         h('main', { className: 'container' },
             h('header', { className: 'ssb-header' },
                 h('p', { className: 'ssb-eyebrow' }, 'UTDANNINGSDIREKTORATET'),
-                h('h1', null, 'Udir · Spørringer til Power BI'),
-                h('p', { className: 'text-gray-600' }, 'Velg tabell fra Elevundersøkelsen og kopier en ferdig Power Query-spørring.')),
+                h('h1', null, 'Udir · Spørringer til Power BI og R'),
+                h('p', { className: 'text-gray-600' }, 'Velg tabell fra Elevundersøkelsen og kopier ferdig Power Query-kode eller et R-skript.')),
             h('nav', { className: 'ssb-steps', 'aria-label': 'Trinn i Udir-spørring' },
-                ['Velg tabell', 'Velg filtre', 'Kopier til Power BI'].map((label, index) => h('button', {
+                ['Velg tabell', 'Velg filtre', 'Hent kode'].map((label, index) => h('button', {
                     key: label, type: 'button', className: step === index + 1 ? 'active' : '', 'aria-current': step === index + 1 ? 'step' : undefined,
                     disabled: busy || (index > 0 && !selected) || (index === 2 && (!filter || tooLong)), onClick: () => setStep(index + 1)
                 }, h('span', null, index + 1), label))),
-            h('p', { className: 'udir-intro' }, 'Data hentes direkte i Power BI. Filteroversikten er lagret sammen med nettsiden', catalog ? ' og ble hentet ' + date(catalog.fetchedAt) + '.' : '.'),
+            h('p', { className: 'udir-intro' }, 'Data hentes direkte i Power BI eller R. Filteroversikten er lagret sammen med nettsiden', catalog ? ' og ble hentet ' + date(catalog.fetchedAt) + '.' : '.'),
             busy && h('p', { className: 'ssb-message', role: 'status' }, 'Laster Udir-oversikten …'),
             error && h('div', { className: 'ssb-message ssb-error', role: 'alert' }, error,
                 button('Prøv igjen', () => selected && step > 1 ? openTable(selected) : setAttempt(value => value + 1))),
@@ -163,26 +166,28 @@ export function UdirBuilder() {
                     tooLong && h('p', { role: 'status', className: 'ssb-validation' }, 'Filteret gir en svært lang API-lenke. Velg færre verdier før du lager spørringen.')),
                 h('div', { className: 'ssb-actions' }, button('Tilbake til tabeller', () => setStep(1)),
                     button('Tilbakestill til Udirs standardvalg', () => setConfig(udirInitialConfig(dimensions))),
-                    button('Lag Power Query-kode →', () => setStep(3), !filter || tooLong, true))),
+                    button('Lag Power Query-kode →', () => { setOutput('m'); setStep(3); }, !filter || tooLong, true),
+                    button('Lag R-kode →', () => { setOutput('r'); setStep(3); }, !filter || tooLong))),
             step === 3 && filter && h('section', { className: 'card' },
-                h('h2', null, 'Spørringen er klar for Power BI'),
-                h('ol', { className: 'udir-instructions' },
+                h('h2', null, output === 'r' ? 'Spørringen er klar for R' : 'Spørringen er klar for Power BI'),
+                output !== 'r' && h('ol', { className: 'udir-instructions' },
                     h('li', null, 'I Power BI: velg Transformer data → Ny kilde → Tom spørring.'),
                     h('li', null, 'Åpne Avansert redigering og erstatt innholdet med koden nedenfor.'),
                     h('li', null, 'Velg Anonym som autentisering til https://api.statistikkbanken.udir.no.')),
+                output === 'r' && h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Lim koden inn i R eller RStudio. Installer httr2 og jsonlite én gang, som vist øverst i skriptet. Alle sidene hentes, radantallet kontrolleres, og resultatet ligger i data (data.frame).'),
                 h('label', { className: 'ssb-checkbox' }, h('input', { type: 'checkbox', checked: numeric, onChange: event => setNumeric(event.target.checked) }),
                     'Legg til numeriske verdikolonner (_tall). Originalverdier og prikking beholdes.'),
                 h('div', { className: 'ssb-output-tabs', role: 'group', 'aria-label': 'Udir-kodeformat' },
-                    [['m', 'Power Query (alle sider)'], ['url', 'API-lenke (side 1)']].map(([key, label]) => h('button', {
+                    [['m', 'Power Query (alle sider)'], ['r', 'R-skript (alle sider)'], ['url', 'API-lenke (side 1)']].map(([key, label]) => h('button', {
                         key, type: 'button', 'aria-pressed': output === key, className: output === key ? 'active' : '', onClick: () => setOutput(key)
                     }, label))),
-                h('textarea', { className: 'ssb-code', value: output === 'm' ? code : url, readOnly: true, rows: 18, spellCheck: false,
+                h('textarea', { className: 'ssb-code', value: displayCode, readOnly: true, rows: 18, spellCheck: false,
                     'aria-label': 'Generert Udir-spørring', onFocus: event => event.target.select() }),
-                h('div', { className: 'ssb-actions' }, button(output === 'm' ? 'Kopier Power Query-kode' : 'Kopier API-lenke', copy, false, true),
-                    button('Last ned M-kode', download), button('Endre filtre', () => setStep(2)),
+                h('div', { className: 'ssb-actions' }, button(output === 'r' ? 'Kopier R-kode' : output === 'm' ? 'Kopier Power Query-kode' : 'Kopier API-lenke', copy, false, true),
+                    output === 'r' ? button('Last ned R-skript', () => downloadRScript(rCode, 'udir-' + selected.id)) : button('Last ned M-kode', download), button('Endre filtre', () => setStep(2)),
                     h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Åpne JSON hos Udir (side 1) ↗'),
                     h('a', { href: udirDataURL(selected.id, filter, 4), target: '_blank', rel: 'noopener noreferrer' }, 'Åpne CSV hos Udir (side 1) ↗')),
-                h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Power Query henter alle sidene og kontrollerer radantallet. Direkte API-lenker åpner bare første side. Forhåndsvis data i Power BI; Udir tillater ikke direkte forhåndsvisning fra denne nettsiden.')),
+                h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Power Query- og R-koden henter alle sidene og kontrollerer radantallet. Direkte API-lenker åpner bare første side. Forhåndsvis data i Power BI eller R.')),
             h('footer', { className: 'ssb-footer text-sm text-gray-600' }, h('p', null, 'Kilde: Utdanningsdirektoratet. Prikkede verdier (*) skal ikke tolkes som null eller summeres.'),
                 h('a', { href: 'https://apikonsoll.statistikkbanken.udir.no/', target: '_blank', rel: 'noopener noreferrer' }, 'Udirs API-konsoll og dokumentasjon ↗')))
     );

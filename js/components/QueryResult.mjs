@@ -1,4 +1,5 @@
 import { tokenizeJson } from '../lib/jsonHighlight.mjs';
+import { fhiRCode, downloadRScript } from '../lib/rCode.mjs';
 
 const h = React.createElement;
 
@@ -19,7 +20,9 @@ export function renderQueryResult(
 ) {
     const queryString = JSON.stringify(finalQuery, null, 2);
     const powerQueryCode = generatePowerQueryCode();
-    const displayCode = outputFormat === 'powerquery' ? powerQueryCode : queryString;
+    const rCode = fhiRCode(finalQuery, API_BASE, selectedSource?.id, selectedTable?.tableId);
+    const displayCode = outputFormat === 'r' ? rCode : outputFormat === 'powerquery' ? powerQueryCode : queryString;
+    const copyLabel = outputFormat === 'r' ? 'Kopier R-kode' : outputFormat === 'powerquery' ? 'Kopier Power Query' : 'Kopier spørring';
 
     return h('div', { className: 'space-y-4' },
         selectedTable && h('div', { className: 'mb-6 pb-4 border-b border-gray-200' },
@@ -35,15 +38,16 @@ export function renderQueryResult(
                 h('p', { className: 'text-gray-600' }, 'Denne spørringen kan brukes mot FHI API')
             ),
             h('div', { className: 'mb-4' },
-                h('div', { className: 'flex gap-2 mb-4' },
+                h('div', { className: 'flex gap-2 mb-4', style: { flexWrap: 'wrap' } },
                     h('button', {
                         className: 'btn btn-outline flex items-center gap-2',
                         onClick: function() { copyToClipboard(displayCode); },
-                        'aria-label': outputFormat === 'powerquery' ? 'Kopier Power Query' : 'Kopier spørring'
+                        'aria-label': copyLabel
                     },
                         h(Icons.Copy),
-                        outputFormat === 'powerquery' ? 'Kopier Power Query' : 'Kopier spørring'
+                        copyLabel
                     ),
+                    outputFormat === 'r' && h('button', { type: 'button', className: 'btn btn-outline', onClick: () => downloadRScript(rCode, 'fhi-' + selectedTable.tableId) }, 'Last ned R-skript'),
                     h('button', {
                         className: 'btn btn-primary flex items-center gap-2',
                         onClick: fetchPreview,
@@ -57,7 +61,7 @@ export function renderQueryResult(
             ),
             h('div', { className: 'mb-4' },
                 h('label', { className: 'label mb-2' }, 'Velg format:'),
-                h('div', { className: 'flex gap-4' },
+                h('div', { className: 'flex gap-4', style: { flexWrap: 'wrap' } },
                     h('label', { className: 'flex items-center gap-2' },
                         h('input', {
                             type: 'radio',
@@ -75,12 +79,17 @@ export function renderQueryResult(
                             onChange: function() { setOutputFormat('powerquery'); }
                         }),
                         h('span', { className: 'text-sm' }, 'Power Query (for Power BI/Excel)')
+                    ),
+                    h('label', { className: 'flex items-center gap-2' },
+                        h('input', { type: 'radio', className: 'radio', checked: outputFormat === 'r', onChange: () => setOutputFormat('r') }),
+                        h('span', { className: 'text-sm' }, 'R-skript')
                     )
                 )
             ),
             h('div', { className: 'code-block mb-4' },
                 outputFormat === 'json' ? renderHighlightedJson(displayCode) : displayCode
             ),
+            outputFormat === 'r' && h('p', { className: 'text-sm text-gray-600 mb-4' }, 'Lim koden inn i R eller RStudio. Installer httr2 og jsonlite én gang, som vist øverst i skriptet. Dataene hentes som en data.frame kalt data. R-koden velger CSV-format automatisk.'),
             h('div', { className: 'text-sm text-gray-600 p-4 bg-blue-50 rounded border border-blue-200' },
                 h('p', { className: 'font-semibold mb-4' }, '🔗 API & Mapping URLs:'),
 

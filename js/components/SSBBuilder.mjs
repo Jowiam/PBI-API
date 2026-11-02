@@ -4,6 +4,7 @@ import {
     datasetView, datasetCSV
 } from '../lib/ssb.mjs';
 import { SSBTableExplorer } from './SSBTableExplorer.mjs';
+import { ssbRCode, downloadRScript } from '../lib/rCode.mjs';
 
 const { createElement: h, useState, useEffect, useRef } = React;
 const number = value => value.toLocaleString('nb-NO');
@@ -164,7 +165,7 @@ export function SSBBuilder() {
 
     const getURL = query ? ssbGetURL(tableId, query) : '';
     const codeText = !query ? '' : output === 'powerquery' ? ssbPowerQuery(tableId, query, dimensions, withCodes)
-        : output === 'url' ? getURL : JSON.stringify(query, null, 2);
+        : output === 'r' ? ssbRCode(tableId, query, dimensions, withCodes) : output === 'url' ? getURL : JSON.stringify(query, null, 2);
     const view = preview ? datasetView(preview) : null;
 
     return h('div', { className: 'bg-gradient ssb-app' },
@@ -173,7 +174,7 @@ export function SSBBuilder() {
             h('header', { className: 'ssb-header' },
                 h('p', { className: 'ssb-eyebrow' }, 'STATISTISK SENTRALBYRÅ'),
                 h('h1', null, 'Statistikkbanken · SSB'),
-                h('p', { className: 'text-gray-600' }, 'Finn tabeller, velg data og bygg spørringer til Power BI eller Excel.')),
+                h('p', { className: 'text-gray-600' }, 'Finn tabeller, velg data og bygg spørringer til Power BI, Excel eller R.')),
             h('nav', { className: 'ssb-steps', 'aria-label': 'Trinn i SSB-spørring' },
                 ['Finn tabell', 'Velg data', 'Hent og eksporter'].map((label, index) => h('button', {
                     key: label, className: step === index + 1 ? 'active' : '',
@@ -209,7 +210,8 @@ export function SSBBuilder() {
                     tooLarge && h('p', { className: 'ssb-validation', role: 'status' }, 'Utvalget er for stort. Velg færre regioner, perioder eller andre verdier.')),
                 h('div', { className: 'ssb-actions' },
                     button('Tilbake til tabellsøk', () => navigate(1)),
-                    button('Bygg spørring →', () => navigate(3), !valid, true))
+                    button('Bygg spørring →', () => navigate(3), !valid, true),
+                    button('Lag R-kode →', () => { setOutput('r'); navigate(3); }, !valid))
             ),
             step === 3 && query && h('section', { className: 'card' },
                 h('div', { className: 'ssb-actions ssb-result-toolbar' },
@@ -218,17 +220,19 @@ export function SSBBuilder() {
                     button('Endre utvalg', () => navigate(2), Boolean(busy))),
                 h('label', { className: 'ssb-checkbox' },
                     h('input', { type: 'checkbox', checked: withCodes, onChange: event => setWithCodes(event.target.checked) }),
-                    'Ta med både koder og navn i CSV og Power Query'),
+                    'Ta med både koder og navn i CSV, Power Query og R'),
                 h('div', { className: 'ssb-output-tabs', role: 'group', 'aria-label': 'Kodeformat' },
-                    [['powerquery', 'Power Query (Power BI / Excel)'], ['json', 'JSON-spørring'], ['url', 'API-lenke']].map(([key, label]) => h('button', {
+                    [['powerquery', 'Power Query (Power BI / Excel)'], ['r', 'R-skript'], ['json', 'JSON-spørring'], ['url', 'API-lenke']].map(([key, label]) => h('button', {
                         key, type: 'button', className: output === key ? 'active' : '', 'aria-pressed': output === key, onClick: () => setOutput(key)
                     }, label))),
                 output === 'powerquery' && h('p', { className: 'text-sm text-gray-600' }, 'Opprett en tom spørring i Power Query og lim inn koden i Avansert redigering. Velg Anonym som tilkobling. Koden henter en flat CSV-tabell; angi ønskede datatyper i Power Query.'),
+                output === 'r' && h('p', { className: 'text-sm text-gray-600' }, 'Lim koden inn i R eller RStudio. Installer httr2 og jsonlite én gang, som vist øverst i skriptet. Resultatet blir en data.frame kalt data, med originale verdier og en ekstra numerisk verdikolonne.'),
                 output === 'json' && h('p', { className: 'ssb-endpoint text-sm' }, 'POST ' + ssbDataURL(tableId)),
                 output === 'url' && getURL.length > 2000 && h('p', { className: 'ssb-validation' }, 'Lenken er lang. Bruk JSON med POST eller Power Query for dette utvalget.'),
                 h('textarea', { className: 'ssb-code', readOnly: true, value: codeText, rows: 14, spellCheck: false, 'aria-label': 'Generert ' + output + '-kode', onFocus: event => event.target.select() }),
                 h('div', { className: 'ssb-actions' },
-                    button('Kopier ' + (output === 'url' ? 'lenke' : 'kode'), () => copy(codeText)),
+                    button(output === 'r' ? 'Kopier R-kode' : 'Kopier ' + (output === 'url' ? 'lenke' : 'kode'), () => copy(codeText)),
+                    output === 'r' && button('Last ned R-skript', () => downloadRScript(codeText, 'ssb-' + tableId)),
                     button(preview ? 'Oppdater forhåndsvisning' : 'Hent forhåndsvisning', fetchPreview, Boolean(busy), true),
                     preview && button('Last ned CSV', download, Boolean(busy))),
                 !preview && h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Forhåndsvisning henter hele utvalget. De første 100 radene vises her, og CSV-nedlasting inneholder alle radene.'),

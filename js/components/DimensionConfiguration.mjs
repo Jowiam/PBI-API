@@ -491,7 +491,7 @@ export function renderDimensionConfiguration(
             );
         }),
         ),
-        h('div', { className: 'flex gap-2' },
+        h('div', { className: 'flex gap-2', style: { flexWrap: 'wrap' } },
             h('button', {
                 className: 'btn btn-outline',
                 onClick: function() { setStep(2); }
@@ -499,7 +499,11 @@ export function renderDimensionConfiguration(
             h('button', {
                 className: 'btn btn-primary flex-1',
                 onClick: buildFinalQuery
-            }, 'Generer spørring')
+            }, 'Generer spørring'),
+            h('button', {
+                type: 'button', className: 'btn btn-outline',
+                onClick: () => buildFinalQuery('r'), disabled: loading
+            }, 'Lag R-kode →')
         )
     );
 }

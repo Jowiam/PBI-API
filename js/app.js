@@ -280,7 +280,8 @@ function FHIQueryBuilder() {
         });
     }
 
-    function buildFinalQuery() {
+    function buildFinalQuery(format) {
+        if (format === 'r') setOutputFormat('r');
         setFinalQuery(buildQuery(dimensions, queryConfig, responseFormat, maxRowCount));
         setStep(4);
     }
