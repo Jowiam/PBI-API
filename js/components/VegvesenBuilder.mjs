@@ -170,7 +170,7 @@ export function VegvesenBuilder() {
                 h('p', { className: 'text-gray-600' }, selected.length + ' målestasjoner · ' + TRAFFIC_MODES[options.mode]),
                 output !== 'r' && h('ol', { className: 'udir-instructions' }, h('li', null, 'I Power BI: Transformer data → Ny kilde → Tom spørring.'),
                     h('li', null, 'Lim koden inn i Avansert redigering.'), h('li', null, 'Velg Anonym som autentisering til ' + TRAFFIC_API)),
-                output === 'r' && h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Lim koden inn i R eller RStudio. Installer httr2 og jsonlite én gang, som vist øverst i skriptet. Alle valgte stasjoner og sider hentes til data (data.frame), med dekningsgrad og norske tidspunkter.'),
+                output === 'r' && h('p', { className: 'text-sm text-gray-600 mt-4' }, 'Kjør koden i R eller RStudio med httr2 og jsonlite installert. Alle valgte stasjoner og sider hentes til data (data.frame), med dekningsgrad og norske tidspunkter.'),
                 h('div', { className: 'ssb-output-tabs', role: 'group', 'aria-label': 'Vegvesen-kodeformat' },
                     [['m', 'Power Query (komplett uttrekk)'], ['r', 'R-skript (komplett uttrekk)'], ['json', 'GraphQL / JSON']].map(([key, label]) => h('button', { key, type: 'button', className: output === key ? 'active' : '', 'aria-pressed': output === key, onClick: () => setOutput(key) }, label))),
                 output === 'json' && h('p', { className: 'text-sm text-gray-600' }, 'POST ' + TRAFFIC_API + ' · Eksempel for første stasjon og første side/år. Power Query-koden henter hele utvalget.'),

@@ -2,8 +2,13 @@ import { ssbDataURL } from './ssb.mjs';
 import { UDIR_BASE } from './udir.mjs';
 import { TRAFFIC_API, TRAFFIC_MODES, validateTrafficOptions, trafficRequest } from './vegvesen.mjs';
 
-const rString = value => JSON.stringify(String(value));
-const rJSON = value => 'jsonlite::fromJSON(' + rString(JSON.stringify(value)) + ', simplifyVector = FALSE)';
+const rString = value => {
+    const chars = Array.from(String(value));
+    if (chars.length <= 300) return JSON.stringify(String(value));
+    const chunks = [];
+    for (let i = 0; i < chars.length; i += 300) chunks.push(JSON.stringify(chars.slice(i, i + 300).join('')));
+    return 'paste0(\n  ' + chunks.join(',\n  ') + '\n)';
+};
 const prelude = source => `# Hent data fra ${source} til R. Resultatet ligger i data (data.frame).
 # Installer pakkene én gang ved behov:
 # install.packages(c("httr2", "jsonlite"))
@@ -131,20 +136,19 @@ export function trafficRCode(points, options) {
     const request = trafficRequest(points[0], options);
     const interval = options.mode === 'hour' || options.mode === 'day';
     const selected = points.map(point => ({ id: point.id, name: point.name, road: point.road, county: point.county?.name || '', municipality: point.municipality?.name || '', trafficType: point.trafficType }));
-    let script = prelude('Statens vegvesen (NLOD)') + requestHelpers +
+    let script = 'library(httr2)\nlibrary(jsonlite)\n\n' +
         'url <- ' + rString(TRAFFIC_API) + '\n' +
-        'points <- ' + rJSON(selected) + '\n' +
+        'points <- list(\n' + selected.map(point => '  list(\n' + Object.entries(point).map(([key, value]) => '    ' + key + ' = ' + rString(value)).join(',\n') + '\n  )').join(',\n') + '\n)\n\n' +
         'query_text <- ' + rString(request.query) + '\n' +
         String.raw`
 post_graphql <- function(variables) {
   req <- httr2::request(url)
   req <- httr2::req_body_json(req, list(query = query_text, variables = variables),
                              auto_unbox = TRUE, null = "null")
-  response <- httr2::resp_body_json(perform_request(req), simplifyVector = FALSE)
+  response <- httr2::resp_body_json(httr2::req_perform(req), simplifyVector = FALSE)
   if (length(response$errors)) {
     stop(paste(vapply(response$errors, function(error) error$message, character(1)), collapse = "; "))
   }
-  if (is.null(response$data)) stop("Vegvesenet returnerte ingen datarespons.")
   response$data
 }
 
@@ -155,21 +159,12 @@ post_graphql <- function(variables) {
         String.raw`read_point <- function(point) {
   rows <- list()
   cursor <- NULL
-  seen_cursors <- character()
   repeat {
     response <- post_graphql(list(pointId = point$id, from = from, to = to, after = cursor))
     page <- response$trafficData$volume$intervals
-    if (is.null(page) || is.null(page$edges) || !is.logical(page$pageInfo$hasNextPage) || length(page$pageInfo$hasNextPage) != 1L) {
-      stop("Uventet sideformat fra Vegvesenet.")
-    }
     rows <- c(rows, lapply(page$edges, function(edge) edge$node))
     if (!isTRUE(page$pageInfo$hasNextPage)) break
-    next_cursor <- page$pageInfo$endCursor
-    if (is.null(next_cursor) || !nzchar(next_cursor) || next_cursor %in% seen_cursors || length(page$edges) == 0L) {
-      stop("Sidepekeren fra Vegvesenet mangler eller går ikke videre. Uttrekket er avbrutt.")
-    }
-    seen_cursors <- c(seen_cursors, next_cursor)
-    cursor <- next_cursor
+    cursor <- page$pageInfo$endCursor
   }
   rows
 }
@@ -192,31 +187,31 @@ post_graphql <- function(variables) {
 }
 `;
     script += String.raw`
-or_na <- function(value) if (is.null(value) || length(value) == 0L) NA else value
 to_row <- function(node, point) {
-  list(StasjonId = point$id, Stasjon = point$name, Veg = point$road,
+  lapply(list(StasjonId = point$id, Stasjon = point$name, Veg = point$road,
        Fylke = point$county, Kommune = point$municipality, Trafikktype = point$trafficType,
        Datatype = ` + rString(TRAFFIC_MODES[options.mode]) + String.raw`,
-       Fra = or_na(node$from), Til = or_na(node$to), Aar = or_na(node$year), Maaned = or_na(node$month),
-       Passeringer = or_na(node$total$volumeNumbers$volume),
-       Gjennomsnitt_per_doegn = or_na(node$total$volume$average),
-       Dekningsgrad_prosent = or_na(node$total$coverage$percentage),
-       KI_nedre = or_na(node$total$volume$confidenceInterval$lowerBound),
-       KI_oevre = or_na(node$total$volume$confidenceInterval$upperBound))
+       Fra = node$from, Til = node$to, Aar = node$year, Maaned = node$month,
+       Passeringer = node$total$volumeNumbers$volume,
+       Gjennomsnitt_per_doegn = node$total$volume$average,
+       Dekningsgrad_prosent = node$total$coverage$percentage,
+       KI_nedre = node$total$volume$confidenceInterval$lowerBound,
+       KI_oevre = node$total$volume$confidenceInterval$upperBound),
+       function(value) if (is.null(value)) NA else value)
 }
 point_rows <- lapply(points, function(point) lapply(read_point(point), function(node) to_row(node, point)))
 rows <- do.call(c, point_rows)
-columns <- c("StasjonId", "Stasjon", "Veg", "Fylke", "Kommune", "Trafikktype", "Datatype", "Fra", "Til", "Aar", "Maaned", "Passeringer", "Gjennomsnitt_per_doegn", "Dekningsgrad_prosent", "KI_nedre", "KI_oevre")
-data <- rows_to_df(rows, columns)
-# Tolk ISO-tid med offset og vis tidspunktene i norsk tid, også ved skifte til/fra sommertid.
-parse_time <- function(value) {
-  text <- sub("Z$", "+0000", as.character(value))
+data <- as.data.frame(jsonlite::fromJSON(
+  jsonlite::toJSON(rows, auto_unbox = TRUE, null = "null", na = "null", digits = NA),
+  flatten = TRUE), check.names = FALSE)
+
+for (column in c("Fra", "Til")) {
+  text <- sub("Z$", "+0000", as.character(data[[column]]))
   text <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", text)
-  as.POSIXct(text, format = "%Y-%m-%dT%H:%M:%OS%z", tz = "Europe/Oslo")
+  data[[column]] <- as.POSIXct(text, format = "%Y-%m-%dT%H:%M:%OS%z", tz = "Europe/Oslo")
 }
-for (column in c("Fra", "Til")) data[[column]] <- parse_time(data[[column]])
 `;
-    return script + finish;
+    return script;
 }
 
 export function downloadRScript(code, name) {

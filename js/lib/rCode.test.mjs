@@ -4,7 +4,11 @@ import { fhiRCode, ssbRCode, udirRCode, trafficRCode } from './rCode.mjs';
 
 // Generated JSON string literals are valid in both R and JSON. Decode the
 // payload to verify the API contract, including singleton arrays and escaping.
-const literal = (script, variable) => JSON.parse(script.split('\n').find(line => line.startsWith(variable + ' <- ')).slice(variable.length + 4));
+const literal = (script, variable) => {
+    const value = script.slice(script.indexOf(variable + ' <- ') + variable.length + 4);
+    if (!value.startsWith('paste0(')) return JSON.parse(value.split('\n')[0]);
+    return value.slice('paste0(\n'.length, value.indexOf('\n)')).split('\n').map(line => JSON.parse(line.trim().replace(/,$/, ''))).join('');
+};
 const point = { id: '55092V1125799', name: 'Bru "A" \\ Tromsø\nNord', road: 'EV8', county: { name: 'Troms' }, municipality: { name: 'Tromsø' }, trafficType: 'VEHICLE' };
 const options = { mode: 'hour', startDate: '2026-03-29', endDate: '2026-03-29', startYear: 2024, endYear: 2025 };
 
@@ -48,17 +52,18 @@ test('Udir R keeps filters intact and implements complete retrieval with optiona
 test('Vegvesen R retains every station and safely escapes station names', () => {
     const points = Array.from({ length: 65 }, (_, index) => ({ ...point, id: 'station' + index }));
     const script = trafficRCode(points, options);
-    const expression = script.split('\n').find(line => line.startsWith('points <- '));
-    const jsonLiteral = expression.slice('points <- jsonlite::fromJSON('.length, -', simplifyVector = FALSE)'.length);
-    const decoded = JSON.parse(JSON.parse(jsonLiteral));
-    assert.equal(decoded.length, 65);
-    assert.equal(decoded[0].name, point.name);
-    assert.equal(decoded[64].id, 'station64');
+    const ids = [...script.matchAll(/^    id = (".*"),$/gm)].map(match => JSON.parse(match[1]));
+    const names = [...script.matchAll(/^    name = (".*"),$/gm)].map(match => JSON.parse(match[1]));
+    assert.equal(ids.length, 65);
+    assert.equal(names[0], point.name);
+    assert.equal(ids[64], 'station64');
+    assert.ok(script.split('\n').every(line => Buffer.byteLength(line, 'utf8') < 4094));
     assert.equal(literal(script, 'from'), '2026-03-29T00:00:00+01:00');
     assert.equal(literal(script, 'to'), '2026-03-30T00:00:00+02:00');
-    assert.match(script, /seen_cursors/);
+    assert.match(script, /cursor <- page\$pageInfo\$endCursor/);
     assert.match(script, /response\$errors/);
     assert.match(script, /Europe\/Oslo/);
+    assert.doesNotMatch(script, /requireNamespace|req_retry|perform_request|rows_to_df|get_json|parse_number|message\(|print\(/);
 });
 
 test('Vegvesen R uses the selected resolution and year interval and rejects invalid selections', () => {
