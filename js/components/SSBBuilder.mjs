@@ -226,7 +226,7 @@ export function SSBBuilder() {
                         key, type: 'button', className: output === key ? 'active' : '', 'aria-pressed': output === key, onClick: () => setOutput(key)
                     }, label))),
                 output === 'powerquery' && h('p', { className: 'text-sm text-gray-600' }, 'Opprett en tom spørring i Power Query og lim inn koden i Avansert redigering. Velg Anonym som tilkobling. Koden henter en flat CSV-tabell; angi ønskede datatyper i Power Query.'),
-                output === 'r' && h('p', { className: 'text-sm text-gray-600' }, 'Lim koden inn i R eller RStudio. Installer httr2 og jsonlite én gang, som vist øverst i skriptet. Resultatet blir en data.frame kalt data, med originale verdier og en ekstra numerisk verdikolonne.'),
+                output === 'r' && h('p', { className: 'text-sm text-gray-600' }, 'Kjør koden i R eller RStudio med httr2 installert. Resultatet ligger i data (data.frame). Kolonnene leses som tekst.'),
                 output === 'json' && h('p', { className: 'ssb-endpoint text-sm' }, 'POST ' + ssbDataURL(tableId)),
                 output === 'url' && getURL.length > 2000 && h('p', { className: 'ssb-validation' }, 'Lenken er lang. Bruk JSON med POST eller Power Query for dette utvalget.'),
                 h('textarea', { className: 'ssb-code', readOnly: true, value: codeText, rows: 14, spellCheck: false, 'aria-label': 'Generert ' + output + '-kode', onFocus: event => event.target.select() }),

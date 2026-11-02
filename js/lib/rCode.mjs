@@ -81,7 +81,17 @@ export function fhiRCode(query, apiBase, sourceId, tableId) {
 
 export function ssbRCode(tableId, query, dimensions, withCodes = false) {
     const body = { ...query, placement: { stub: dimensions.map(dim => dim.code), heading: [] } };
-    return csvScript('SSB', ssbDataURL(tableId, 'csv', dimensions, withCodes), body);
+    return 'library(httr2)\n\n' +
+        'url <- ' + rString(ssbDataURL(tableId, 'csv', dimensions, withCodes)) + '\n' +
+        'body <- ' + rString(JSON.stringify(body)) + '\n\n' +
+        String.raw`response <- request(url) |>
+  req_body_raw(charToRaw(enc2utf8(body)), type = "application/json") |>
+  req_perform()
+
+data <- read.csv(text = resp_body_string(response), sep = ";",
+                 colClasses = "character", na.strings = "", comment.char = "",
+                 check.names = FALSE)
+`;
 }
 
 export function udirRCode(tableId, filter, numericColumns = true) {

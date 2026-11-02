@@ -30,6 +30,7 @@ test('SSB R keeps dynamic periods and puts all dimensions into rows, including P
     assert.equal(url.searchParams.get('outputFormat'), 'csv');
     assert.match(url.searchParams.get('outputFormatParams'), /UseCodesAndTexts/);
     assert.match(script, /colClasses = "character"/); // Preserve leading zeroes.
+    assert.doesNotMatch(script, /function\s*\(|requireNamespace|req_retry|stop\(|message\(|print\(|_tall|jsonlite/);
 });
 
 test('Udir R keeps filters intact and implements complete retrieval with optional numeric fields', () => {

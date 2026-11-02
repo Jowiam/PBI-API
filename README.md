@@ -57,8 +57,10 @@ fra API-et når du kjører det. R trengs bare på maskinen som kjører skriptet;
 nettsiden fungerer fortsatt på GitHub Pages.
 
 Udir henter alle sider og kontrollerer radantallet. Vegvesenet henter alle
-valgte stasjoner og sider/år. FHI og SSB leser CSV med koder og originale
-verdier som tekst og legger til en numerisk `_tall`-kolonne for verdifeltet.
+valgte stasjoner og sider/år. SSB gir et enkelt skript som bruker `httr2`
+til å hente CSV og lese kolonnene som tekst til `data`, uten ekstra behandling.
+FHI leser CSV med koder og originale verdier som tekst og legger til en
+numerisk `_tall`-kolonne for verdifeltet.
 FHI velger CSV-format automatisk for R. Udir kan også legge til numeriske
 `_tall`-kolonner. Manglende eller prikkede verdier blir `NA` i tallkolonnene;
 originalfeltene beholdes. Vegvesenets tidspunkter leses som `POSIXct` med

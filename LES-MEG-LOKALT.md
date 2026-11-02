@@ -40,7 +40,8 @@ Kjør hele skriptet. Resultatet ligger i `data`, en vanlig `data.frame`.
 Skriptet bruker de valgte filtrene og henter ferske data fra API-et.
 Udir henter alle sider og kontrollerer radantallet. Vegvesenet henter alle
 valgte stasjoner og sider/år, og beholder norske tidspunkter som `POSIXct`.
-FHI og SSB beholder koder og originale verdier som tekst og legger til
+SSB bruker bare `httr2` og leser CSV-kolonnene som tekst til `data`, uten
+ekstra behandling. FHI beholder koder og originale verdier som tekst og legger til
 en numerisk `_tall`-kolonne for verdifeltet. Udirs valg av numeriske
 kolonner gjelder også R. Manglende/prikkede verdier blir `NA` i tallkolonnene.
 R-koden velger CSV-format automatisk hos FHI.
