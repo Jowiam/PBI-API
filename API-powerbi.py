@@ -1,4 +1,4 @@
-"""Start FHI og SSB API-spørringsbygger med Python, uten ekstra pakker."""
+"""Start FHI, SSB og Udir API-spørringsbygger med Python, uten ekstra pakker."""
 
 import argparse
 from functools import partial
@@ -27,7 +27,7 @@ def main():
     except OSError as exc:
         parser.exit(1, f"Kunne ikke starte serveren: {exc}\nPrøv en annen --port.\n")
     with server:
-        print(f"FHI og SSB API-spørringsbygger: http://localhost:{server.server_port}", flush=True)
+        print(f"FHI, SSB og Udir API-spørringsbygger: http://localhost:{server.server_port}", flush=True)
         print("Stopp serveren med Ctrl+C.", flush=True)
         try:
             server.serve_forever()

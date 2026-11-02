@@ -1,9 +1,9 @@
-# FHI og SSB – API-spørringsbygger
+# FHI, SSB og Udir – spørringer til Power BI
 
 Dette prosjektet tar utgangspunkt i https://github.com/janhli/FHI-API-Query-Builder,
 lastet ned fra `main` 2. november 2026. Originalens kode, dokumentasjon og
 MIT-lisens er beholdt. Se `README.md` og `LICENSE`.
-Den lokale løsningen har i tillegg en egen SSB-del.
+Den lokale løsningen har i tillegg egne deler for SSB og Udir.
 
 ## Start
 
@@ -20,7 +20,7 @@ Ingen ekstra Python-pakker er nødvendige.
 
 ## Bruk
 
-Velg **FHI · Folkehelse** eller **SSB · Statistikkbanken** i toppmenyen.
+Velg **FHI · Folkehelse**, **SSB · Statistikkbanken** eller **Udir · Utdanning** i toppmenyen.
 Utvalget i hver del beholdes når du bytter mellom dem.
 
 ### FHI
@@ -93,11 +93,52 @@ en lenke til originalens geografifil på GitHub i resultatvisningen.
 
 ## Lokale tilpasninger
 
+### Udir – hent direkte til Power BI
+
+1. Velg **Udir · Utdanning** og en av de åtte tabellene fra Elevundersøkelsen.
+2. Tilpass skoleår, enhet, trinn og øvrige filtre. Udirs standardvalg er
+   forhåndsvalgt. Søk etter Troms for å finne fylket og skolene under fylket.
+   Velg fylkesraden for fylkestall; hver valgt skole gir egne skoletall.
+3. Velg **Lag Power Query-kode**, og kopier koden.
+4. I Power BI: **Transformer data → Ny kilde → Tom spørring → Avansert
+   redigering**. Erstatt innholdet med koden.
+5. Velg **Anonym** som autentisering til `https://api.statistikkbanken.udir.no`.
+
+Koden henter antall sider fra Udir, leser samtlige sider og kontrollerer at
+radantallet stemmer. Det er ikke nødvendig å skrive API-kall selv. Knappen
+**Last ned M-kode** lagrer samme spørring som en `.pq`-fil.
+
+Valget **Legg til numeriske verdikolonner** lager ekstra `_tall`-kolonner
+for måltall. Disse leser norsk komma og tusenskille. Originalfeltene
+beholdes, inkludert prikkede verdier (`*`). I tallkolonnene gir manglende
+eller prikkede verdier `null`, ikke nullverdien 0. Bruk originalkolonnen
+for å skille mellom manglende og prikkede verdier. Ikke summer både
+fylkestall, skoletall og andre overlappende aggregater.
+
+Filteroversikten ligger lokalt i `data/udir/`, fordi Udirs API ikke tillater
+nettleserkall fra GitHub Pages. Selve dataene hentes ferskt av Power Query.
+Det er ingen forhåndsvisning på nettsiden. Direkte JSON-/CSV-lenker åpner
+bare første side; bruk Power Query-koden for et komplett uttrekk.
+
+Oppdater listen ved nye skoleår eller endringer hos Udir:
+
+```powershell
+python scripts/update_udir_metadata.py
+```
+
+Skriptet henter kun offentlige tabell- og filtermetadata. Du committer og
+pusher de oppdaterte filene selv. Gyldighet av filterkombinasjoner avgjøres
+av Udir når spørringen kjøres; filtre kan variere mellom skoleår og skoler.
+
+### Prosjektfiler
+
 - `API-powerbi.py` starter en lokal server, bundet til 127.0.0.1, med riktige
   innholdstyper for JavaScript-moduler.
 - Originalens GoatCounter-besøksmåling er fjernet fra `index.html`.
 - Ny leverandørmeny og SSB-del i `js/components/SSBBuilder.mjs`,
   API- og eksportlogikk i `js/lib/ssb.mjs` og egne tester i `ssb.test.mjs`.
+- Udir-del i `js/components/UdirBuilder.mjs` og `js/lib/udir.mjs`, med
+  publiserbare filtermetadata i `data/udir/`.
 
 ## Publisere på GitHub Pages
 

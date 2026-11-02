@@ -137,6 +137,13 @@
 .ssb-table-badges > span { padding: .12rem .4rem; background: #f0f4f2; border-radius: .2rem; color: #47625e; font-size: .7rem; }
 .ssb-catalog-status { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: .6rem; border-top: 1px solid var(--color-border-subtle); font-size: .72rem; color: var(--color-text-light); }
 .ssb-catalog-status .ssb-text-button { font-size: .75rem; }
+.udir-intro { margin: 0 0 1rem; padding: .7rem 1rem; border-left: 3px solid #49768b; background: #edf3f7; color: #344f5e; font-size: .85rem; }
+.udir-app { --ssb-accent: #28566e; }
+.udir-group { margin-top: 1.5rem; }
+.udir-level { display: block; font-size: .85rem; margin-bottom: .8rem; }
+.udir-level select { margin-top: .3rem; }
+.udir-instructions { padding-left: 1.5rem; margin: 1rem 0; }
+.udir-instructions li { margin-bottom: .5rem; }
 .ssb-discovery-options { justify-content: start; }
 .ssb-discovery-options > button { margin-left: auto; }
 @media (max-width: 1150px) {

@@ -1,5 +1,6 @@
 import { Icons, getSourceIcon } from './components/icons.mjs';
 import { SSBBuilder } from './components/SSBBuilder.mjs';
+import { UdirBuilder } from './components/UdirBuilder.mjs';
 import { parseTableLabelsCSV } from './lib/csv.mjs';
 import { getTableLabel, getTableCategory, flattenCategories } from './lib/tableLabels.mjs';
 import { getGeographyGroups } from './lib/geo.mjs';
@@ -373,16 +374,19 @@ function FHIQueryBuilder() {
 function StatisticsApp() {
     const [provider, setProvider] = useState('fhi');
     const [ssbOpened, setSSBOpened] = useState(false);
+    const [udirOpened, setUdirOpened] = useState(false);
     return h(React.Fragment, null,
         h('nav', { className: 'provider-nav', 'aria-label': 'Velg statistikkleverandør' },
             h('div', { className: 'provider-nav-inner' },
                 h('strong', null, 'Statistikk · API-spørringsbygger'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'fhi', onClick: () => setProvider('fhi') }, 'FHI · Folkehelse'),
-                h('button', { type: 'button', 'aria-pressed': provider === 'ssb', onClick: () => { setSSBOpened(true); setProvider('ssb'); } }, 'SSB · Statistikkbanken')
+                h('button', { type: 'button', 'aria-pressed': provider === 'ssb', onClick: () => { setSSBOpened(true); setProvider('ssb'); } }, 'SSB · Statistikkbanken'),
+                h('button', { type: 'button', 'aria-pressed': provider === 'udir', onClick: () => { setUdirOpened(true); setProvider('udir'); } }, 'Udir · Utdanning')
             )
         ),
         h('div', { hidden: provider !== 'fhi' }, h(FHIQueryBuilder)),
-        ssbOpened && h('div', { hidden: provider !== 'ssb' }, h(SSBBuilder))
+        ssbOpened && h('div', { hidden: provider !== 'ssb' }, h(SSBBuilder)),
+        udirOpened && h('div', { hidden: provider !== 'udir' }, h(UdirBuilder))
     );
 }
 
