@@ -1,8 +1,9 @@
-# FHI API Query Builder – lokal kopi
+# FHI og SSB – API-spørringsbygger
 
 Dette prosjektet tar utgangspunkt i https://github.com/janhli/FHI-API-Query-Builder,
 lastet ned fra `main` 2. november 2026. Originalens kode, dokumentasjon og
 MIT-lisens er beholdt. Se `README.md` og `LICENSE`.
+Den lokale løsningen har i tillegg en egen SSB-del.
 
 ## Start
 
@@ -19,14 +20,62 @@ Ingen ekstra Python-pakker er nødvendige.
 
 ## Bruk
 
+Velg **FHI · Folkehelse** eller **SSB · Statistikkbanken** i toppmenyen.
+Utvalget i hver del beholdes når du bytter mellom dem.
+
+### FHI
+
 1. Velg datakilde og tabell.
 2. Velg dimensjoner som geografi, år og måltall.
 3. Bygg spørringen og hent forhåndsvisning eller last ned CSV.
 4. For Power BI: kopier koden i Power Query-fanen til avansert redigering i
    en tom spørring i Power Query.
 
+### SSB
+
+1. Åpne SSB-fanen. Bla i de seks emnegruppene og deres underemner, søk etter
+   tabelltittel, variabelnavn eller emne, eller skriv et femsifret tabellnummer.
+   Søkeresultatene viser periode, oppdateringsdato, emne og variabler.
+   Bruk brødsmulene for å gå tilbake i emnehierarkiet, eller velg et annet
+   emne i sidemenyen. På mobil åpnes sidemenyen med **Emner og underemner**.
+   Sorter etter relevans, oppdateringsdato eller tittel, og avgrens til nylig
+   oppdaterte tabeller. Bruk neste/forrige side for flere treff.
+2. Velg tabell og tilpass variablene. Søk etter navn eller kode i hver
+   verdiliste, velg enkeltverdier eller alle verdier. Tidsvariabelen kan
+   bruke et dynamisk utvalg av siste perioder, slik at nye publiseringer
+   automatisk blir med ved neste kjøring av den genererte spørringen.
+3. Velg **Bygg spørring**. Kopier Power Query-koden, JSON-spørringen
+   (POST-body) eller API-lenken (GET). JSON-fanen viser også POST-adressen.
+4. Velg **Hent forhåndsvisning** og deretter **Last ned CSV**. Hele utvalget
+   hentes; maksimalt 100 rader vises i nettleseren. CSV inneholder alle rader
+   samt måleenhet og eventuelle statuskoder fra SSB.
+
+Første verdi i hver variabel og opptil tre siste perioder er forhåndsvalgt.
+Dette er et lite startutvalg; kontroller at det svarer på spørsmålet ditt.
+Søk for eksempel etter **Troms** i regionlisten i tabell **07459**.
+Forsiden viser også nylig oppdaterte tabeller gruppert etter publiseringsdag
+og statistikk. Åpne en gruppe for å velge en tabell direkte.
+Tabelloversikten hentes fra SSB én gang per besøk og gjenbrukes ved søk og
+emnefiltrering. Variabelverdier søker du i etter at en tabell er åpnet.
+Emneoppsettet og publiseringsoversikten er inspirert av
+[Statistikkportalen](https://statistikkportalen.no/#home); ingen kode er kopiert derfra.
+Grensen på 800 000 dataceller kontrolleres før uttrekk. Ved begrensning på
+antall forespørsler fra SSB vises en melding om å vente før nytt forsøk.
+
+Power Query-koden bruker SSBs CSV-format, riktig tegnsett (ISO-8859-1) og
+alle variablene som radkolonner. Velg **Anonym** som autentisering til
+`https://data.ssb.no`. Angi datatyper etter import i Power Query. CSV-filen
+som lastes ned fra forhåndsvisningen er UTF-8 med BOM og semikolon.
+SSB bruker punktum som desimalskilletegn; velg egnet nasjonal innstilling
+ved konvertering av tall i Excel eller Power Query.
+
+SSB-delen bruker [PxWebApi v2](https://www.ssb.no/api/pxwebapiv2).
+Data fra SSB er under CC BY 4.0; oppgi Statistisk sentralbyrå som kilde ved
+videre bruk. Valg av alternative kodelister eller aggregerte grupperinger
+er foreløpig tilgjengelig via selve Statistikkbanken, ikke i denne appen.
+
 Appen kjører i nettleseren. Python serverer appfilene lokalt.
-Internett kreves for React fra unpkg.com og data fra FHI. Appen har også
+Internett kreves for React fra unpkg.com og data fra FHI og SSB. Appen har også
 en lenke til originalens geografifil på GitHub i resultatvisningen.
 
 ## Lokale tilpasninger
@@ -34,6 +83,19 @@ en lenke til originalens geografifil på GitHub i resultatvisningen.
 - `API-powerbi.py` starter en lokal server, bundet til 127.0.0.1, med riktige
   innholdstyper for JavaScript-moduler.
 - Originalens GoatCounter-besøksmåling er fjernet fra `index.html`.
+- Ny leverandørmeny og SSB-del i `js/components/SSBBuilder.mjs`,
+  API- og eksportlogikk i `js/lib/ssb.mjs` og egne tester i `ssb.test.mjs`.
 
-Originalens automatiske tester kjøres med `node --test js` og krever Node.js
-18 eller nyere. Node.js er ikke nødvendig for å bruke appen.
+## Publisere på GitHub Pages
+
+Last opp prosjektfilene til `main`, inkludert `.github`-mappen. Under
+**Settings → Pages → Source**, velg **GitHub Actions**. Arbeidsflyten
+`Deploy static content to Pages` publiserer ved push til `main` og kan også
+startes manuelt fra Actions. FHI og SSB bruker HTTPS og støtter direkte
+API-kall fra nettleseren. Python og Node.js trengs ikke på den publiserte siden.
+Lokale verktøy og testfiler i `.tools/` og `.tmp/` skal ikke lastes opp.
+
+Testene kjøres med `node --test` fra prosjektmappen (Node.js 20 eller nyere).
+En portabel Node.js ligger lokalt under `.tools/node-v22.14.0-win-x64/` og
+kan brukes med `.\.tools\node-v22.14.0-win-x64\node.exe --test`.
+Node.js er ikke nødvendig for å bruke appen.

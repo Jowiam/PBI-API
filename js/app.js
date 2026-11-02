@@ -1,4 +1,5 @@
 import { Icons, getSourceIcon } from './components/icons.mjs';
+import { SSBBuilder } from './components/SSBBuilder.mjs';
 import { parseTableLabelsCSV } from './lib/csv.mjs';
 import { getTableLabel, getTableCategory, flattenCategories } from './lib/tableLabels.mjs';
 import { getGeographyGroups } from './lib/geo.mjs';
@@ -369,8 +370,24 @@ function FHIQueryBuilder() {
     );
 }
 
+function StatisticsApp() {
+    const [provider, setProvider] = useState('fhi');
+    const [ssbOpened, setSSBOpened] = useState(false);
+    return h(React.Fragment, null,
+        h('nav', { className: 'provider-nav', 'aria-label': 'Velg statistikkleverandør' },
+            h('div', { className: 'provider-nav-inner' },
+                h('strong', null, 'Statistikk · API-spørringsbygger'),
+                h('button', { type: 'button', 'aria-pressed': provider === 'fhi', onClick: () => setProvider('fhi') }, 'FHI · Folkehelse'),
+                h('button', { type: 'button', 'aria-pressed': provider === 'ssb', onClick: () => { setSSBOpened(true); setProvider('ssb'); } }, 'SSB · Statistikkbanken')
+            )
+        ),
+        h('div', { hidden: provider !== 'fhi' }, h(FHIQueryBuilder)),
+        ssbOpened && h('div', { hidden: provider !== 'ssb' }, h(SSBBuilder))
+    );
+}
+
 function mount() {
-    ReactDOM.createRoot(document.getElementById('root')).render(h(FHIQueryBuilder));
+    ReactDOM.createRoot(document.getElementById('root')).render(h(StatisticsApp));
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mount);

@@ -4,6 +4,10 @@
 
 # FHI API Query Builder
 
+> Denne kopien er utvidet med en egen SSB-fane for tabellsøk, variabelvalg,
+> forhåndsvisning, CSV og Power Query. Se [lokal bruksanvisning](./LES-MEG-LOKALT.md)
+> for FHI og SSB, oppstart, tester og GitHub Pages. Originaldokumentasjonen følger nedenfor.
+
 En interaktiv web-applikasjon som gjør det enkelt å bygge og kjøre spørringer mot FHIs åpne statistikk-API.
 
 [Publisert versjon](https://janhli.github.io/FHI-API-Query-Builder/)
@@ -111,7 +115,7 @@ python -m http.server 8000
 Ingen `npm install` nødvendig — testene bruker Node sin innebygde testrunner (krever Node 18+):
 
 ```bash
-node --test js
+node --test
 ```
 
 ### Hvilke formater støttes?
