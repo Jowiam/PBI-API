@@ -95,6 +95,13 @@ startes manuelt fra Actions. FHI og SSB bruker HTTPS og støtter direkte
 API-kall fra nettleseren. Python og Node.js trengs ikke på den publiserte siden.
 Lokale verktøy og testfiler i `.tools/` og `.tmp/` skal ikke lastes opp.
 
+Den publiserte siden er https://jowiam.github.io/PBI-API/.
+Hvis siden viser en eldre versjon, start **Actions → Deploy static content to
+Pages → Run workflow** med grenen **main**. **Re-run jobs** på en gammel
+kjøring publiserer koden fra den gamle commit-en og kan derfor erstatte
+en nyere versjon av siden. Kontroller commit-en i publiseringsjobben hvis
+SSB-fanen mangler etter publisering.
+
 Testene kjøres med `node --test` fra prosjektmappen (Node.js 20 eller nyere).
 En portabel Node.js ligger lokalt under `.tools/node-v22.14.0-win-x64/` og
 kan brukes med `.\.tools\node-v22.14.0-win-x64\node.exe --test`.

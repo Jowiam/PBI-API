@@ -10,7 +10,9 @@
 
 En interaktiv web-applikasjon som gjør det enkelt å bygge og kjøre spørringer mot FHIs åpne statistikk-API.
 
-[Publisert versjon](https://janhli.github.io/FHI-API-Query-Builder/)
+[Åpne FHI og SSB – publisert versjon](https://jowiam.github.io/PBI-API/)
+
+Originalprosjektets FHI-versjon finnes [her](https://janhli.github.io/FHI-API-Query-Builder/).
 
 ## Hva er det?
 
