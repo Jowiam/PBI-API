@@ -1,0 +1,776 @@
+/* CSS Variables for consistent theming */
+        :root {
+            --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            --color-bg: #F6F7F9;
+            --color-primary-dark: #14212E;
+            --color-primary: #1f2937;
+            --color-text-light: #4b5563;
+            --color-text-lighter: #6b7280;
+            --color-text-faint: #9ca3af;
+            --color-border: #D7DBE1;
+            --color-border-subtle: #E6E9ED;
+            --color-blue: #1B4B6B;
+            --color-blue-dark: #123650;
+            --color-blue-soft: #E9F0F4;
+            --color-green: #10b981;
+            --color-white: #ffffff;
+            --shadow-sm: 0 1px 2px rgba(20,33,46,0.06);
+            --shadow-md: 0 2px 6px rgba(20,33,46,0.08);
+            --radius: 0.375rem;
+            --color-code-bg: #10202B;
+            --color-code-text: #C7D2DB;
+            --color-code-punctuation: #6E7F8D;
+            --color-code-key: #8FB8D9;
+            --color-code-string: #C9B380;
+            --color-code-literal: #8FBC94;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-system);
+            line-height: 1.5;
+            color: var(--color-primary);
+        }
+
+        .bg-gradient {
+            min-height: 100vh;
+            background: var(--color-bg);
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 72rem;
+            margin: 0 auto;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-2 { margin-bottom: 0.25rem; }
+        .mb-4 { margin-bottom: 0.5rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mr-1 { margin-right: 0.25rem; }
+        .ml-auto { margin-left: auto; }
+
+        .p-2 { padding: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--color-primary-dark);
+            font-family: var(--font-system);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primary-dark);
+            font-family: var(--font-system);
+        }
+
+        h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-family: var(--font-system);
+        }
+
+        .text-gray-600 { color: var(--color-text-light); }
+        .text-gray-500 { color: var(--color-text-lighter); }
+        .text-gray-400 { color: #6b7280; } /* Oppgradert for bedre kontrast (WCAG AA) */
+        .text-blue-600 { color: var(--color-blue); }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .text-lg { font-size: 1rem; font-family: var(--font-system); }
+        .label-emphasis { font-weight: 600; font-size: 0.85rem; color: var(--color-primary); font-family: var(--font-system); }
+        .heading-modal { font-size: 1.5rem; font-weight: 700; font-family: var(--font-system); }
+        .heading-section { font-size: 1.875rem; font-weight: 700; font-family: var(--font-system); }
+        .table-header { font-size: 0.875rem; font-weight: 600; }
+        .table-value { font-size: 0.875rem; font-weight: 500; }
+        .table-cell { font-size: 0.875rem; }
+
+        .card {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            border: 1px solid var(--color-border-subtle);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .dimension-card {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            border: 1px solid var(--color-border-subtle);
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0;
+        }
+
+        .dimension-card h3 {
+            font-size: 0.975rem;
+            font-weight: 600;
+            margin-bottom: 0.15rem;
+        }
+
+        .dimension-card p {
+            font-size: 0.75rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .dimension-card .space-y-2 > * + * { margin-top: 0.3rem; }
+        .dimension-card .space-y-4 > * + * { margin-top: 0.3rem; }
+
+        .dimension-card .label {
+            font-size: 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .dimension-card .input {
+            font-size: 0.8rem;
+        }
+
+        .dimension-card .max-h-60 {
+            max-height: 12rem;
+        }
+
+        @media (max-width: 768px) {
+            .dimensions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card-hover {
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            border: 1px solid var(--color-border);
+        }
+
+        .card-hover:hover {
+            border-color: var(--color-blue);
+            background: var(--color-blue-soft);
+        }
+
+        .card-hover:focus {
+            outline: 3px solid var(--color-blue);
+            outline-offset: 2px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn:focus {
+            outline: 3px solid var(--color-blue);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: var(--color-blue);
+            color: var(--color-white);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--color-blue-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: var(--color-text-lighter);
+        }
+
+        .btn-outline:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-icon {
+            padding: 0.375rem;
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: var(--color-text-lighter);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .btn-icon:hover {
+            background: #f3f4f6;
+            border-color: var(--color-text-faint);
+            color: var(--color-text-lighter);
+        }
+
+        .btn-icon:focus {
+            outline: 3px solid var(--color-blue);
+            outline-offset: 2px;
+        }
+
+        .input, .select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .input:focus, .select:focus {
+            outline: 2px solid var(--color-blue);
+            outline-offset: 2px;
+        }
+
+        .checkbox, .radio {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid #fecaca;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .grid-cols-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-4 > * + * { margin-top: 0.5rem; }
+
+        .dimension-card .space-y-2 > * + * { margin-top: 0.3rem; }
+        .dimension-card .space-y-4 > * + * { margin-top: 0.3rem; }
+
+        .overflow-y-auto {
+            overflow-y: auto;
+        }
+
+        .max-h-60 {
+            max-height: 24rem;
+        }
+
+        .max-h-96 {
+            max-height: 60vh;
+        }
+
+        .border {
+            border: 1px solid var(--color-border);
+        }
+
+        .rounded {
+            border-radius: 0.375rem;
+        }
+
+        .rounded-full {
+            border-radius: 9999px;
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0;
+            margin-bottom: 3rem;
+            position: relative;
+            padding: 0;
+        }
+
+        /* 4 equal-width step-items; a circle sits centered in each, so the
+           first/last circle center is at half an item's width (100%/8) in
+           from the edge. Both the static track (::before) and the dynamic
+           progress fill (::after, see StepIndicator.mjs for --completed-width)
+           span the same 12.5%-87.5% range so they always line up with the
+           circles. */
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: calc(1.5rem - 3px);
+            left: 12.5%;
+            right: 12.5%;
+            height: 6px;
+            background: var(--color-border);
+            z-index: 0;
+        }
+
+        .step-indicator::after {
+            content: '';
+            position: absolute;
+            top: calc(1.5rem - 3px);
+            left: 12.5%;
+            height: 6px;
+            background: var(--color-blue);
+            z-index: 1;
+            /* --completed-width runs 0%-100% over the full indicator; the
+               track only spans the middle 75% (12.5%-87.5%), so scale it
+               down to match. */
+            width: calc(var(--completed-width, 0%) * 0.75);
+            transition: width 0.3s ease;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            position: relative;
+            z-index: 10;
+        }
+
+        .step-item:hover:not(.step-disabled) .step-circle {
+            transform: scale(1.1);
+        }
+
+        .step-disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            z-index: 10;
+        }
+
+        .step-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            z-index: 10;
+            position: relative;
+        }
+
+        .step-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            color: inherit;
+            background: none !important;
+        }
+
+        .step-active {
+            background: var(--color-blue);
+            color: white;
+            border-color: var(--color-blue);
+        }
+
+        .step-active .step-label {
+            color: var(--color-blue);
+            font-weight: 700;
+            background: none !important;
+        }
+
+        .step-label.step-active {
+            background: none !important;
+            color: var(--color-blue);
+            font-weight: 700;
+        }
+
+        .step-completed {
+            background: var(--color-blue);
+            color: white;
+            border-color: var(--color-blue);
+        }
+
+        .step-completed .step-label {
+            color: var(--color-blue);
+            font-weight: 500;
+            background: none !important;
+        }
+
+        .step-label.step-completed {
+            background: none !important;
+            color: var(--color-blue);
+            font-weight: 500;
+        }
+
+        .step-inactive {
+            background: var(--color-white);
+            color: var(--color-text-lighter);
+            border-color: var(--color-border);
+        }
+
+        .step-inactive .step-label {
+            color: var(--color-text-lighter);
+            font-weight: 500;
+            background: none !important;
+        }
+
+        .step-label.step-inactive {
+            background: none !important;
+            color: var(--color-text-lighter);
+            font-weight: 500;
+        }
+
+        .code-block {
+            background: var(--color-code-bg);
+            color: var(--color-code-text);
+            padding: 1.25rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            white-space: pre;
+        }
+
+        .json-key { color: var(--color-code-key); }
+        .json-string { color: var(--color-code-string); }
+        .json-number,
+        .json-boolean,
+        .json-null { color: var(--color-code-literal); }
+
+        .tabs {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 0.375rem;
+            padding: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab-active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab:hover {
+            background: #e5e7eb;
+        }
+
+        .tab-active:hover {
+            background: white;
+        }
+
+        .icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .source-icon {
+            stroke: #374151;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .font-semibold {
+            font-weight: 600;
+        }
+
+        .font-bold {
+            font-weight: 700;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .bg-blue-50 {
+            background: var(--color-blue-soft);
+        }
+
+        .border-blue-200 {
+            border-color: var(--color-border);
+        }
+
+        .bg-green-50 {
+            background: #EEF3EC;
+        }
+
+        .border-green-200 {
+            border-color: #CBDBC6;
+        }
+
+        .geo-hierarchy {
+            padding-left: 0;
+        }
+
+        .geo-county {
+            margin-bottom: 0.5rem;
+        }
+
+        .geo-county-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.5rem;
+            background: #f9fafb;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .geo-county-header:hover {
+            background: #f3f4f6;
+        }
+
+        .geo-county-checkbox {
+            margin-right: 0.25rem;
+        }
+
+        .geo-chevron {
+            width: 1rem;
+            height: 1rem;
+            transition: transform 0.2s;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .geo-chevron:focus {
+            outline: 2px solid var(--color-blue);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .geo-chevron:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .geo-chevron.expanded {
+            transform: rotate(90deg);
+        }
+
+        .geo-municipality-list {
+            padding-left: 1.5rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .geo-municipality {
+            margin-bottom: 0.25rem;
+        }
+
+        .geo-municipality-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: #fafbfc;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.813rem;
+            transition: background 0.2s;
+        }
+
+        .geo-municipality-header:hover {
+            background: #f3f4f6;
+        }
+
+        .geo-district-list {
+            padding-left: 1.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .geo-district {
+            font-size: 0.813rem;
+            padding: 0.125rem 0.5rem;
+        }
+
+        .geo-indent {
+            padding-left: 0.5rem;
+        }
+
+        .geo-select-btn {
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .geo-select-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .geo-select-btn:focus {
+            outline: 3px solid var(--color-blue);
+            outline-offset: 2px;
+        }
+
+        /* Skip link for tastaturnavigasjon */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--color-blue);
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 1000;
+            font-weight: 600;
+        }
+
+        .skip-link:focus {
+            top: 0;
+            outline: 3px solid white;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.875rem;
+            }
+        }
+
+        /* Respekt for brukerpreferanse: reduser bevegelse */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .geo-chevron {
+                transition: none;
+            }
+
+            .step-item:hover:not(.step-disabled) .step-circle {
+                transform: none;
+            }
+
+            .card-hover,
+            .btn,
+            .btn-icon,
+            .step-item {
+                transition: none;
+            }
+
+            @keyframes spin {
+                /* Animasjon deaktivert */
+            }
+        }
