@@ -196,11 +196,13 @@ Hvis noe går galt:
 
 ## Kontakt og tilbakemelding
 
-Utviklet av Akershus analyse, en del av Akershus fylkeskommune.
+Kontakt for denne videreutviklede versjonen: [Jowiam på GitHub](https://github.com/Jowiam).
 
-- **Kontakt**: janli@afk.no
-- **Om Akershus analyse**: https://akershusanalyse.no/
-- **Om Akershus fylkeskommune**: https://afk.no/
+Originalkilden er [FHI API Query Builder](https://github.com/janhli/FHI-API-Query-Builder),
+utviklet av Jan Hiroshi Lintvedt / Akershus analyse, en del av Akershus fylkeskommune.
+Emneoppsettet og deler av søket er basert på
+[Statistikkportalen](https://github.com/avocodetoast/statistikkportalen) av Hallvard Mørck.
+Se `LICENSE` og `THIRD-PARTY-NOTICES.md` for lisens og opphavsrett.
 
 ## Lisens
 Denne programvaren er utviklet av Jan Hiroshi Lintvedt / Akershus fylkeskommune og deles som åpen kildekode

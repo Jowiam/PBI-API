@@ -3,6 +3,11 @@
 .provider-nav strong { margin-right: auto; color: #fff; font-size: 1.1rem; }
 .provider-nav button { padding: .5rem 1rem; border: 1px solid #789699; border-radius: .3rem; background: transparent; color: #e5f0ee; cursor: pointer; font: inherit; font-size: .9rem; }
 .provider-nav button[aria-pressed="true"] { background: #fff; color: #253f43; border-color: #fff; }
+.project-footer { padding: 1.3rem 1.5rem; border-top: 1px solid var(--color-border); background: #fff; color: var(--color-text-light); font-size: .8rem; }
+.project-footer-inner { max-width: 82rem; margin: auto; }
+.project-footer p + p { margin-top: .45rem; }
+.project-footer a { color: var(--color-blue); text-decoration: underline; text-underline-offset: 3px; }
+.project-footer a:focus-visible { outline: 3px solid #b67b0c; outline-offset: 3px; }
 .ssb-app { --ssb-accent: #195e55; padding-top: 1.3rem; }
 .ssb-app > .container { max-width: 82rem; }
 .ssb-header { max-width: 48rem; margin: 0 0 1.2rem; }

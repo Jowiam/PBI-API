@@ -2,6 +2,7 @@ import { Icons, getSourceIcon } from './components/icons.mjs';
 import { SSBBuilder } from './components/SSBBuilder.mjs';
 import { UdirBuilder } from './components/UdirBuilder.mjs';
 import { VegvesenBuilder } from './components/VegvesenBuilder.mjs';
+import { ProjectFooter } from './components/ProjectFooter.mjs';
 import { parseTableLabelsCSV } from './lib/csv.mjs';
 import { getTableLabel, getTableCategory, flattenCategories } from './lib/tableLabels.mjs';
 import { getGeographyGroups } from './lib/geo.mjs';
@@ -346,26 +347,6 @@ function FHIQueryBuilder() {
                         target: '_blank',
                         rel: 'noopener noreferrer'
                     }, 'FHI Statistikk')
-                ),
-                h('p', { className: 'mt-4' },
-                    'Utarbeidet av ',
-                    h('a', {
-                        href: 'https://akershusanalyse.no/',
-                        className: 'text-blue-600',
-                        target: '_blank',
-                        rel: 'noopener noreferrer'
-                    }, 'Akershus analyse'),
-                    ', en del av ',
-                    h('a', {
-                        href: 'https://afk.no/',
-                        className: 'text-blue-600',
-                        target: '_blank',
-                        rel: 'noopener noreferrer'
-                    }, 'Akershus fylkeskommune')
-                ),
-                h('p', { className: 'mt-2' },
-                    'kontakt: ',
-                    h('a', { href: 'mailto:janli@afk.no', className: 'text-blue-600' }, 'janli@afk.no')
                 )
             )
         )
@@ -390,7 +371,8 @@ function StatisticsApp() {
         h('div', { hidden: provider !== 'fhi' }, h(FHIQueryBuilder)),
         ssbOpened && h('div', { hidden: provider !== 'ssb' }, h(SSBBuilder)),
         udirOpened && h('div', { hidden: provider !== 'udir' }, h(UdirBuilder)),
-        vegvesenOpened && h('div', { hidden: provider !== 'vegvesen' }, h(VegvesenBuilder))
+        vegvesenOpened && h('div', { hidden: provider !== 'vegvesen' }, h(VegvesenBuilder)),
+        h(ProjectFooter)
     );
 }
 
