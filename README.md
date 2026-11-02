@@ -1,216 +1,223 @@
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/janhli/FHI-API-Query-Builder?style=for-the-badge&color=007db9)
-![License](https://img.shields.io/github/license/janhli/FHI-API-Query-Builder?style=for-the-badge&color=007db9)
+# PBI-API – offentlige data til Power BI
 
+Et nettbasert verktøy som gjør det enklere å finne offentlige data og lage
+spørringer til **Power BI**. Velg datakilde, tabell eller målestasjon og
+ønsket utvalg, og kopier ferdig **Power Query-kode (M)**. Du trenger ikke
+skrive API-kallene selv.
 
-# FHI API Query Builder
+**[Åpne verktøyet](https://jowiam.github.io/PBI-API/)** ·
+[Detaljert bruksanvisning](./LES-MEG-LOKALT.md) ·
+[Kontakt](https://github.com/Jowiam)
 
-> Denne kopien er utvidet med en egen SSB-fane for tabellsøk, variabelvalg,
-> forhåndsvisning, CSV og Power Query. Se [lokal bruksanvisning](./LES-MEG-LOKALT.md)
-> for FHI og SSB, oppstart, tester og GitHub Pages. Originaldokumentasjonen følger nedenfor.
+## Datakilder
 
-Udir er også lagt til som datakilde: velg tabell og filtre og kopier ferdig
-Power Query-kode som henter alle sidene direkte til Power BI.
-Udirs filtermetadata ligger i `data/udir/` og oppdateres med
-`python scripts/update_udir_metadata.py`.
+| Kilde | Tilgjengelig i verktøyet | Funksjoner |
+| --- | --- | --- |
+| **FHI** | Tabeller fra FHIs åpne statistikk-API | Velg kilde, tabell, variabler, geografi og periode. Lag Power Query-/JSON-spørringer, forhåndsvis data og last ned CSV. |
+| **SSB** | Tabeller fra Statistikkbanken via PxWebApi v2 | Søk eller bla i emner og underemner. Filtrer på frekvens og oppdateringsdato, velg variabelverdier og lag Power Query-, JSON- eller GET-spørringer. Forhåndsvisning og CSV støttes. |
+| **Udir** | Elevundersøkelsen: indikatorer, tema, mobbing og deltakelse for grunnskole og videregående | Velg tabell og filtre som skoleår, enhet og trinn. Lag Power Query-kode som henter alle sidene og kontrollerer radantallet. |
+| **Statens vegvesen** | Trafikkdata fra målestasjoner: trafikkmengde per time/døgn, månedlig døgnsnitt og årsdøgntrafikk (ÅDT) | Søk etter stasjoner, filtrer på fylke, kommune og trafikktype, og lag Power Query-kode for valgte stasjoner og perioder. Sideinndeling og kvalitetsmål håndteres i koden. |
 
-Statens vegvesens Trafikkdata-API er også tilgjengelig. Velg målestasjoner,
-trafikkmengde per time/døgn, månedlig døgnsnitt eller ÅDT, og kopier ferdig
-Power Query-kode med sidehåndtering og kvalitetsmål. Stasjonsoversikten i
-`data/vegvesen/` oppdateres med `python scripts/update_vegvesen_metadata.py`.
+Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
+i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et. Verktøyet
+omfatter ikke alle datatjenestene fra Udir eller Statens vegvesen.
 
-SSB-delens emneoppsett og søk er tilpasset med inspirasjon fra
-[Statistikkportalen](https://github.com/avocodetoast/statistikkportalen),
-inkludert synonymgrupper under MIT. Se [tredjepartslisenser](./THIRD-PARTY-NOTICES.md).
+## Kom i gang med Power BI
 
-En interaktiv web-applikasjon som gjør det enkelt å bygge og kjøre spørringer mot FHIs åpne statistikk-API.
+1. Åpne [nettsiden](https://jowiam.github.io/PBI-API/) og velg datakilde i toppmenyen.
+2. Finn tabellen eller målestasjonene du ønsker data fra.
+3. Tilpass filtre, variabler og tidsperiode.
+4. Velg Power Query og kopier den genererte koden.
+5. I Power BI: åpne **Transformer data → Ny kilde → Tom spørring → Avansert redigering**.
+6. Erstatt innholdet med koden og velg **Anonym** som autentisering når Power BI ber om tilkobling til datakilden.
 
-[Åpne statistikkverktøyet – publisert versjon](https://jowiam.github.io/PBI-API/)
+For **FHI** må du velge **CSV2 eller CSV3** som responsformat når du skal
+bruke Power Query-koden. De øvrige kildene velger format gjennom kodegeneratoren.
 
-Originalprosjektets FHI-versjon finnes [her](https://janhli.github.io/FHI-API-Query-Builder/).
+Power Query-koden kan også brukes i Excel der Power Query er tilgjengelig.
+Udir og Vegvesenet har en knapp for å laste ned M-koden som en `.pq`-fil.
 
-## Hva er det?
+## Finne og velge data
 
-FHI API Query Builder er et visuelt verktøy som lar deg utforske og hente data fra [Folkehelseinstituttets statistikk-API](https://www.fhi.no/ta/statistikkalender_og_statistikk/apen-api-og-statistikk/) uten å måtte skrive API-kall manuelt. Appen har et brukervennlig grensesnitt hvor du velger data interaktivt, og får tilbake den JSON-spørringen du kan bruke i dine egne applikasjoner.
+### FHI
 
-## Brukstilfeller
+Velg statistikkilde og tabell, og tilpass dimensjoner som år, geografi og
+måltall. Du kan velge enkeltverdier, alle verdier eller siste perioder der
+tabellen støtter det. Forhåndsvisningen og CSV-nedlastingen kan brukes til
+å undersøke utvalget før du tar spørringen videre til Power BI.
 
-- **Dataanalytikere og forskere** som ønsker å hente norsk folkehelsedata for analyser
-- **Utviklere** som skal integrere FHI-data i sine applikasjoner
-- **Organisasjoner** som skal lage egne dashboards og rapporter basert på folkehelsesdata
-- **Lærere og studenter** som skal lære om norsk folkehelsestatistikk
+### SSB
 
-## Hvordan bruker jeg den?
+Utforsk seks emnegrupper med underemner og brødsmuler, eller søk etter
+tabellnummer, tittel, variabelnavn eller emne. **Smart søk** utvider søket
+med forkortelser og synonymer som BNP, KPI og VGS.
 
-### Trinn-for-trinn guide
+Søkeresultatene kan sorteres og filtreres på frekvens og oppdateringsdato.
+I variabelvalget kan du søke etter navn eller kode og bruke et dynamisk
+utvalg av siste perioder. Forhåndsvisningen viser opptil 100 rader;
+CSV-nedlastingen inneholder hele det hentede utvalget.
 
-1. **Åpne applikasjonen** i en moderne nettleser
+### Udir
 
-2. **Velg datakilde** - I første skjerm velger du hvilken statistikkkilde du ønsker data fra
-   - Se kort beskrivelse av hver kilde
-   - Kildene inneholder ulike typer folkehelseinformasjon
+Tabellene er gruppert i grunnskole og videregående. Filtrene starter med
+Udirs standardvalg og kan tilpasses før du kopierer spørringen.
 
-3. **Velg tabell** - Når du har valgt en kilde, velger du hvilken tabell du ønsker
-   - Du kan søke i tabellene for å finne det du trenger
+Power Query-koden henter alle sider og kontrollerer at antall rader stemmer
+med det Udir oppgir. Du kan få ekstra numeriske `_tall`-kolonner, samtidig
+som originalfeltene beholdes med eventuelle prikkede verdier.
 
-4. **Konfigurer dimensjoner** - Her velger du hvilke variabler og verdier du vil ha med
-   - **Filtertype**: Velg spesifikke verdier, alle verdier, eller for tidsvariabler - siste X år
-   - **Geografi**: For geografiske data kan du velge alle kommuner, enkelt fylke, eller spesifikke kommune/bydel
-   - **Tidsperiode**: For år-dimensjonen kan du velge enkeltår, eller siste X år
-   - **Response format**: Velg JSON-stat2, CSV2 med labels eller CSV3 med koder
-   - Klikk på "Informasjon om tabellen" for detaljer om hva tabellen inneholder
+### Vegvesenet
 
-5. **Kopier eller last ned** - I siste skjerm:
-   - Kopier JSON-spørringen, eller bytt til Power Query-fanen for innbyggingskode til Power BI/Excel
-   - Hent forhåndsvisning av data
-   - Last ned forhåndsvisningen som CSV-fil
+Søk etter stasjonsnavn, ID, vegnummer, kommune eller fylke. Kombiner søket
+med egne filtre for **fylke**, **kommune**, **motorkjøretøy/sykkel** og
+stasjoner i drift.
 
-### Eksempel
+- **Velg alle treff** velger hele trefflisten, også stasjoner som ikke er vist ennå.
+- **Fjern valgte treff** fjerner bare stasjonene i gjeldende søkeresultat.
+- **Tøm alle valg** fjerner alle valgte stasjoner.
 
-Hvis du vil hente dødsfall av demens (inkl. Alzheimers sykdom) fordelt på alder:
+Valg utenfor gjeldende søk beholdes. Den tidligere grensen på 20 stasjoner
+er fjernet. Store utvalg kan gi mange API-kall og lengre oppdateringstid i Power BI.
 
-1. Velg "Dødsårsaksregisteret (DÅR)" som kilde
-2. Velg tabellen "Dødsfall av demens (inkl. Alzheimers sykdom) etter alder" under kategorien "Demens"
-3. Konfigurer dimensjonene (Dødsår, Alder, Dødsårsak, Måltall) - la stå på "Alle" for å ta med alt
-4. Kopier JSON-spørringen eller hent forhåndsvisning og last ned som CSV
+Datoperioder omfatter hele norske kalenderdager, inkludert til-datoen,
+med håndtering av sommer- og vintertid. Time- og døgndata hentes med alle
+sidepekere, månedsdata hentes for hvert valgt år, og ÅDT filtreres til
+ønsket årsintervall. Uttrekket gjelder totalen ved hver stasjon.
 
-## Om FHI Statistikk API
+## Hvordan hentes dataene?
 
-Denne appen bygger på [FHI Statistikk sin åpne API](https://statistikk-data.fhi.no) ([om API-et](https://www.fhi.no/ta/statistikkalender_og_statistikk/apen-api-og-statistikk/)), som tilbyr fritt tilgjengelig norsk folkehelsestatistikk.
+Nettsiden kjører som en statisk applikasjon på GitHub Pages. Det er ingen
+egen backend å starte eller drifte for denne løsningen.
 
-### Ressurser
+| Kilde | Tabell- og filteroversikt | Forhåndsvisning |
+| --- | --- | --- |
+| FHI | Hentes fra FHI, med lokale navne- og geografifiler | På nettsiden og i Power BI |
+| SSB | Hentes fra SSB og mellomlagres i nettleseren i opptil seks timer. Kan oppdateres manuelt. | På nettsiden og i Power BI |
+| Udir | Lagrede metadata i prosjektet, oppdatert med et Python-skript | I Power BI |
+| Vegvesenet | Lagret stasjonsoversikt i prosjektet, oppdatert med et Python-skript | I Power BI |
 
-- **API-dokumentasjon**: [https://github.com/folkehelseinstituttet/Fhi.Statistikk.OpenAPI](https://github.com/folkehelseinstituttet/Fhi.Statistikk.OpenAPI)
-- **Datatyper**: Statistikken inneholder data om blant annet nasjonale prøver, helsedata, skoledata og mer
-- **Oppdateringsfrekvens**: Varierer etter datakilde, typisk årlig eller oftere
-- **Dekningsområde**: Hele Norge, med detaljer på fylke, kommune og bydel-nivå
+Selve datauttrekket i Power Query hentes direkte fra den valgte datakilden.
+De lokale metadatafilene er oversikter over tabeller, filtre og stasjoner,
+ikke lagrede statistikkresultater.
 
-### API-endepunkter som brukes
+Udir tillater ikke direkte API-henting fra GitHub Pages i nettleseren med
+dagens CORS-oppsett. Den lagrede filteroversikten gjør det likevel mulig
+å bygge spørringen på nettsiden og hente dataene direkte i Power BI.
 
-Appen bruker disse FHI API-endepunktene:
+## Datakvalitet og tidsvalg
 
-- `/Common/source` - Henter liste over tilgjengelige kilder
-- `/{sourceId}/Table` - Henter tabeller for en gitt kilde
-- `/{sourceId}/Table/{tableId}/dimension` - Henter dimensjoner (variabler) for en tabell
-- `/{sourceId}/Table/{tableId}/metadata` - Henter detaljert informasjon om en tabell
-- `/{sourceId}/Table/{tableId}/data` - Henter faktiske data basert på spørring
+Tilgjengelige perioder og gyldige filterkombinasjoner bestemmes av kildene.
+Noen utvalg kan være tomme eller inneholde skjulte eller manglende verdier.
 
-**Merk:** Tabell-labels og geo-mapping-data hentes og lenkes same-origin fra repoet i stedet for via GitHub API, noe som gir bedre pålitelighet og ytelse.
+Prikkede verdier hos Udir må ikke tolkes som 0. Originalfeltene beholdes
+selv om du velger ekstra numeriske kolonner. Bruk Udirs ferdige aggregater
+fremfor å summere overlappende fylkes-, kommune- og skoletall.
 
-## Teknisk informasjon
+Vegvesen-spørringene beholder dekningsgrad og eventuelle konfidensintervaller.
+Manglende verdier erstattes ikke med 0. ÅDT og månedlig døgnsnitt er
+gjennomsnitt per døgn, ikke summer for hele året eller måneden.
 
-### Arkitektur
+Tidsvalg som er faste datoer eller år, forblir faste i den kopierte koden.
+SSBs valg av siste perioder er dynamisk. Kontroller utvalget før du bruker
+spørringen i en rapport som skal oppdateres over tid.
 
-Appen er en single-page application (SPA) bygget med:
+## Kjøre lokalt
 
-- **React** - For UI-komponentene
-- **Vanilla JavaScript** - For logikk
-- **HTML/CSS** - For grunnleggende struktur og styling
+Du trenger Python, en moderne nettleser og internett for API-kallene og
+React-filene som lastes fra CDN. Ingen ekstra Python-pakker er nødvendige.
 
-Alt kjører i nettleseren din - ingen backend-server er nødvendig.
+Kjør fra prosjektmappen:
 
-### Filstruktur
-
-- `index.html` — HTML-skall, laster `js/app.js` som ES-modul
-- `js/app.js` — hovedkomponent: state, effekter og sammensetning av skjermbildene
-- `js/lib/` — ren logikk (CSV-parsing, tabell-label-oppslag, geografi-gruppering, spørringsbygging, Power Query-kodegenerering, sikker HTML-rendering, JSON-syntax-highlighting) — hver fil har en tilhørende `*.test.mjs`
-- `js/components/` — ett skjermbilde/UI-element per fil
-
-### Kjøre lokalt
-
-Appen bruker native ES-moduler og må serveres over http(s), ikke åpnes direkte som `file://`:
-
-```bash
-python -m http.server 8000
-# eller: npx serve
+```powershell
+python .\API-powerbi.py
 ```
 
-Åpne deretter `http://localhost:8000`.
+Åpne **http://localhost:8000**. Stopp serveren med **Ctrl+C**.
+Hvis porten er opptatt, bruk `python .\API-powerbi.py --port 8001`.
+Appen må serveres over HTTP; ikke åpne `index.html` direkte som en lokal fil.
 
-### Kjøre tester
+## Oppdatere metadata
 
-Ingen `npm install` nødvendig — testene bruker Node sin innebygde testrunner (krever Node 18+):
+Kjør disse kommandoene fra prosjektmappen når Udir får nye skoleår eller
+filtre, eller når Vegvesenets stasjonsoversikt skal oppdateres:
 
-```bash
+```powershell
+python scripts/update_udir_metadata.py
+python scripts/update_vegvesen_metadata.py
+```
+
+Skriptene henter offentlige metadata og oppdaterer `data/udir/` og
+`data/vegvesen/`. De utfører ingen commit, push eller publisering.
+Tidspunktet for innhenting vises i de aktuelle fanene.
+
+Ta med de oppdaterte metadatafilene når du selv committer og pusher.
+FHI- og SSB-oversiktene hentes direkte av appen og trenger ikke disse skriptene.
+
+## Publisere på GitHub Pages
+
+Prosjektet har en ferdig arbeidsflyt i
+[`.github/workflows/static.yml`](./.github/workflows/static.yml).
+
+1. Push prosjektfilene til `main`, inkludert `js/`, `styles/`, `data/` og `.github/`.
+2. Velg **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+3. Publiseringen starter ved push til `main`. Den kan også startes med **Actions → Deploy static content to Pages → Run workflow → main**.
+
+Bruk nyeste commit ved ny publisering. En ny kjøring av en gammel jobb kan
+publisere en eldre versjon av siden. Hvis en fane mangler etter en vellykket
+publisering, kontroller adressen, commit-en og prøv **Ctrl+F5**.
+
+Lokale verktøy og testfiler i `.tools/` og `.tmp/` er ignorert i Git og skal
+ikke publiseres.
+
+## Tester og prosjektstruktur
+
+Testene bruker Nodes innebygde testrunner. Ingen `npm install` er nødvendig.
+Med Node.js 20 eller nyere:
+
+```powershell
 node --test
 ```
 
-### Hvilke formater støttes?
+Testene dekker blant annet filterbygging, Power Query-generering,
+datokonvertering, geografi, CSV og håndtering av metadata. Automatisk
+testing av kodegeneratoren erstatter ikke kontroll av den ferdige
+spørringen i Power BI.
 
-- **JSON-stat2** (anbefalt) - Strukturert JSON-format egnet for statistikk
-- **CSV2** - CSV med labels (menneskelesbare navn)
-- **CSV3** - CSV med koder (kort kodeversjoner)
+| Fil eller mappe | Innhold |
+| --- | --- |
+| `index.html` | Appens startside |
+| `js/app.js` | Toppmeny og sammensetning av datakildene |
+| `js/components/` | Grensesnitt for datakildene og felles kontaktfelt |
+| `js/lib/` | Spørringsbygging, eksport, søk, datologikk og automatiske tester |
+| `styles/` | Utseende og mobiltilpasning |
+| `data/udir/` | Udirs tabell- og filtermetadata |
+| `data/vegvesen/` | Vegvesenets stasjonsoversikt |
+| `scripts/` | Oppdatering av lokale metadata |
+| `API-powerbi.py` | Lokal HTTP-server |
+| `.github/workflows/` | Tester og publisering på GitHub Pages |
 
-### Data-struktur
+Se [LES-MEG-LOKALT.md](./LES-MEG-LOKALT.md) for flere detaljer og feilsøking.
 
-Spørringer følger FHI APIets struktur:
+## Kontakt, opphav og lisens
 
-```json
-{
-  "dimensions": [
-    { "code": "AAR", "filter": "item", "values": ["2024"] },
-    { "code": "GEO", "filter": "item", "values": ["03", "0301"] },
-    { "code": "MEASURE_TYPE", "filter": "all", "values": ["*"] }
-  ],
-  "response": {
-    "format": "json-stat2"
-  }
-}
-```
+Kontakt for dette prosjektet: **[Jowiam på GitHub](https://github.com/Jowiam)**.
+Forslag og feil kan meldes i [prosjektets Issues](https://github.com/Jowiam/PBI-API/issues).
 
-### Geo-gruppering
+Prosjektet er videreutviklet fra
+[FHI API Query Builder](https://github.com/janhli/FHI-API-Query-Builder)
+av **Jan Hiroshi Lintvedt / Akershus fylkeskommune**.
+Emneoppsettet og søket er inspirert av
+[Statistikkportalen](https://github.com/avocodetoast/statistikkportalen)
+av **Hallvard Mørck**, med gjenbruk av synonymgrupper.
 
-For geografiske data (GEO-dimensjon) håndteres følgende nivåer:
+Koden deles under [MIT-lisensen](./LICENSE). Original opphavsrett og
+tredjepartslisenser er bevart i [LICENSE](./LICENSE) og
+[THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
+Datakildenes egne vilkår og krav til kildehenvisning gjelder for dataene.
 
-- **2 sifre** - Fylker
-- **4 sifre** - Kommuner
-- **6 sifre** - Bydeler (Oslo)
+## Dokumentasjon fra datakildene
 
-Appen lar deg enkelt velge "alle kommuner i fylke X" eller "alle bydeler i Oslo".
-
-### Tidsserier
-
-For år-dimensjonen (AAR) kan du velge:
-
-- `filter: "item"` - Spesifikke år
-- `filter: "all"` - Alle år (wildcard)
-- `filter: "top"` - Siste X år
-
-### Maksimale antall rader
-
-Du kan sette `maxRowCount` for å begrense antall rader i responsen. La feltet stå tomt for ubegrenset.
-
-### Feilhåndtering
-
-Hvis noe går galt:
-
-- Sjekk at du har valgt alle påkrevde dimensjoner
-- Noen kombinasjoner av data kan være skjult av personvernhensyn (færre enn 10 enheter)
-- Se konsollen (F12) for detaljer
-
-## Kompatibilitet
-
-- Chrome/Edge (versjon 90+)
-- Firefox (versjon 88+)
-- Safari (versjon 14+)
-- Fungerer på mobiltelefoner og nettbrett
-
-## Kontakt og tilbakemelding
-
-Kontakt for denne videreutviklede versjonen: [Jowiam på GitHub](https://github.com/Jowiam).
-
-Originalkilden er [FHI API Query Builder](https://github.com/janhli/FHI-API-Query-Builder),
-utviklet av Jan Hiroshi Lintvedt / Akershus analyse, en del av Akershus fylkeskommune.
-Emneoppsettet og deler av søket er basert på
-[Statistikkportalen](https://github.com/avocodetoast/statistikkportalen) av Hallvard Mørck.
-Se `LICENSE` og `THIRD-PARTY-NOTICES.md` for lisens og opphavsrett.
-
-## Lisens
-Denne programvaren er utviklet av Jan Hiroshi Lintvedt / Akershus fylkeskommune og deles som åpen kildekode
-under [MIT-lisensen](./LICENSE). Dette innebærer at alle står fritt til å bruke, kopiere, endre og
-distribuere programvaren, så lenge opphavsretten og lisensvilkårene beholdes.
-
-Dataene fra FHI er tilgjengelig under [Norsk lisensfor offentlige data](https://data.norge.no/nlod/no/1.0).
-
-## Versjon
-
-Gjeldende versjon vises i badgen øverst i denne filen og på [GitHub Releases](https://github.com/janhli/FHI-API-Query-Builder/releases). Appen er under aktiv utvikling - tilbakemeldinger og forbedringer er velkommen!
+- [FHI – åpne API-er og statistikk](https://www.fhi.no/ta/statistikkalender_og_statistikk/apen-api-og-statistikk/)
+- [SSB – brukerveiledning for PxWebApi v2](https://www.ssb.no/api/pxwebapiv2)
+- [Udir – API-konsoll og dokumentasjon](https://apikonsoll.statistikkbanken.udir.no/)
+- [Statens vegvesen – om Trafikkdata-API-et](https://trafikkdata.atlas.vegvesen.no/om-api)
