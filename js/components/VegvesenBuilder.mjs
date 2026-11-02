@@ -1,4 +1,4 @@
-import { TRAFFIC_API, TRAFFIC_MODES, MAX_TRAFFIC_POINTS, addDays, validateTrafficOptions, trafficRequest, trafficPowerQuery, readTrafficStations } from '../lib/vegvesen.mjs';
+import { TRAFFIC_API, TRAFFIC_MODES, addDays, validateTrafficOptions, trafficRequest, trafficPowerQuery, readTrafficStations } from '../lib/vegvesen.mjs';
 import { normalizeSearch } from '../lib/searchSynonyms.mjs';
 
 const { createElement: h, useState, useEffect, useMemo, useRef } = React;
@@ -10,9 +10,11 @@ export function VegvesenBuilder() {
     const [catalog, setCatalog] = useState(null);
     const [search, setSearch] = useState('');
     const [county, setCounty] = useState('');
+    const [municipality, setMunicipality] = useState('');
     const [trafficType, setTrafficType] = useState('VEHICLE');
     const [operationalOnly, setOperationalOnly] = useState(true);
     const [selectedIds, setSelectedIds] = useState([]);
+    const [selectedLimit, setSelectedLimit] = useState(12);
     const [limit, setLimit] = useState(50);
     const [step, setStep] = useState(1);
     const [options, setOptions] = useState(() => ({ mode: 'day', startDate: addDays(today(), -7), endDate: addDays(today(), -1), startYear: Number(today().slice(0, 4)) - 3, endYear: Number(today().slice(0, 4)) - 1 }));
@@ -30,31 +32,50 @@ export function VegvesenBuilder() {
             .finally(() => { if (!controller.signal.aborted) setBusy(false); });
         return () => controller.abort();
     }, [attempt]);
-    useEffect(() => { heading.current?.focus(); setNotice(''); }, [step]);
+    useEffect(() => { heading.current?.focus(); setNotice(''); setSelectedLimit(12); }, [step]);
+    useEffect(() => { setNotice(''); }, [search, county, municipality, trafficType, operationalOnly]);
 
     const stations = catalog?.stations || [];
     const pointMap = useMemo(() => new Map(stations.map(point => [point.id, point])), [catalog]);
-    const selected = selectedIds.map(id => pointMap.get(id)).filter(Boolean);
+    const selected = useMemo(() => selectedIds.map(id => pointMap.get(id)).filter(Boolean), [selectedIds, pointMap]);
+    const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
     const counties = useMemo(() => [...new Map(stations.filter(point => point.county).map(point => [point.county.number, point.county])).values()]
         .sort((a, b) => a.name.localeCompare(b.name, 'nb')), [catalog]);
+    const municipalities = useMemo(() => [...new Map(stations.filter(point => point.municipality && (!county || String(point.county?.number) === county))
+        .map(point => [point.municipality.number, { ...point.municipality, countyName: point.county?.name || '' }])).values()]
+        .sort((a, b) => a.name.localeCompare(b.name, 'nb')), [catalog, county]);
     const filtered = useMemo(() => {
         const words = normalizeSearch(search).trim().split(/\s+/).filter(Boolean);
         return stations.filter(point => (!county || String(point.county?.number) === county) &&
+            (!municipality || String(point.municipality?.number) === municipality) &&
             (!trafficType || point.trafficType === trafficType) && (!operationalOnly || point.status === 'OPERATIONAL') &&
             words.every(word => normalizeSearch([point.id, point.name, point.road, point.road.replace(/([EFR])V(\d+)/g, '$1$2'), point.county?.name, point.municipality?.name].join(' ')).includes(word)));
-    }, [catalog, search, county, trafficType, operationalOnly]);
+    }, [catalog, search, county, municipality, trafficType, operationalOnly]);
+    const filteredIds = useMemo(() => new Set(filtered.map(point => point.id)), [filtered]);
+    const selectedMatches = filtered.reduce((total, point) => total + Number(selectedSet.has(point.id)), 0);
     let validation = '';
     let code = '';
     let request = null;
     try {
         validateTrafficOptions(selected, options);
-        code = trafficPowerQuery(selected, options);
-        request = trafficRequest(selected[0], options);
+        if (step === 3) {
+            code = trafficPowerQuery(selected, options);
+            request = trafficRequest(selected[0], options);
+        }
     } catch (err) { validation = err.message; }
     const intervalMode = options.mode === 'hour' || options.mode === 'day';
     function toggle(point) {
         setNotice('');
-        setSelectedIds(prev => prev.includes(point.id) ? prev.filter(id => id !== point.id) : prev.length < MAX_TRAFFIC_POINTS ? [...prev, point.id] : prev);
+        setSelectedIds(prev => prev.includes(point.id) ? prev.filter(id => id !== point.id) : [...prev, point.id]);
+    }
+    function selectMatches() {
+        setSelectedIds(prev => [...new Set([...prev, ...filteredIds])]);
+        setSelectedLimit(12);
+        setNotice('Alle ' + filtered.length.toLocaleString('nb-NO') + ' treff er valgt. Tidligere valg utenfor søket er beholdt.');
+    }
+    function deselectMatches() {
+        setSelectedIds(prev => prev.filter(id => !filteredIds.has(id)));
+        setNotice('Valgte stasjoner i gjeldende søk er fjernet. Andre valg er beholdt.');
     }
     function update(key, value) { setOptions(prev => ({ ...prev, [key]: value })); }
     async function copy() {
@@ -70,8 +91,10 @@ export function VegvesenBuilder() {
     }
 
     const chosen = h('div', { className: 'traffic-selected', 'aria-label': 'Valgte målestasjoner' },
-        h('strong', null, selected.length + ' av maksimalt ' + MAX_TRAFFIC_POINTS + ' stasjoner valgt'),
-        selected.map(point => h('button', { key: point.id, type: 'button', onClick: () => toggle(point), 'aria-label': 'Fjern ' + point.name }, point.name + ' ×')));
+        h('strong', null, selected.length.toLocaleString('nb-NO') + ' stasjoner valgt'),
+        selected.slice(0, selectedLimit).map(point => h('button', { key: point.id, type: 'button', onClick: () => toggle(point), 'aria-label': 'Fjern ' + point.name }, point.name + ' ×')),
+        selected.length > selectedLimit && button('Vis flere valgte (' + (selected.length - selectedLimit).toLocaleString('nb-NO') + ' gjenstår)', () => setSelectedLimit(prev => prev + 50)),
+        selectedLimit > 12 && button('Vis færre valgte', () => setSelectedLimit(12)));
 
     return h('div', { className: 'bg-gradient ssb-app traffic-app' },
         h('main', { className: 'container' },
@@ -94,22 +117,28 @@ export function VegvesenBuilder() {
                 h('label', { htmlFor: 'traffic-search' }, 'Søk etter målestasjon'),
                 h('input', { id: 'traffic-search', className: 'input', type: 'search', value: search, placeholder: 'For eksempel Tromsø, E6 eller Breivika', onChange: event => { setSearch(event.target.value); setLimit(50); } }),
                 h('div', { className: 'traffic-filters' },
-                    h('label', null, 'Fylke', h('select', { className: 'input', 'aria-label': 'Vegvesen fylke', value: county, onChange: event => { setCounty(event.target.value); setLimit(50); } },
+                    h('label', null, 'Fylke', h('select', { className: 'input', 'aria-label': 'Vegvesen fylke', value: county, onChange: event => { setCounty(event.target.value); setMunicipality(''); setLimit(50); } },
                         h('option', { value: '' }, 'Alle fylker'), counties.map(item => h('option', { key: item.number, value: String(item.number) }, item.name)))),
+                    h('label', null, 'Kommune', h('select', { className: 'input', 'aria-label': 'Vegvesen kommune', value: municipality, onChange: event => { setMunicipality(event.target.value); setLimit(50); } },
+                        h('option', { value: '' }, 'Alle kommuner'), municipalities.map(item => h('option', { key: item.number, value: String(item.number) }, item.name + (!county && item.countyName ? ' · ' + item.countyName : ''))))),
                     h('label', null, 'Trafikktype', h('select', { className: 'input', 'aria-label': 'Trafikktype', value: trafficType, onChange: event => { setTrafficType(event.target.value); setLimit(50); } },
                         h('option', { value: '' }, 'Alle typer'), h('option', { value: 'VEHICLE' }, 'Motorkjøretøy'), h('option', { value: 'BICYCLE' }, 'Sykkel'))),
                     h('label', { className: 'ssb-checkbox' }, h('input', { type: 'checkbox', checked: operationalOnly, onChange: event => { setOperationalOnly(event.target.checked); setLimit(50); } }), 'Bare stasjoner i drift')),
                 chosen,
+                h('div', { className: 'ssb-actions traffic-selection-actions' },
+                    button('Velg alle treff (' + filtered.length.toLocaleString('nb-NO') + ')', selectMatches, busy || !filtered.length || selectedMatches === filtered.length),
+                    button('Fjern valgte treff', deselectMatches, !selectedMatches),
+                    button('Tøm alle valg', () => { setSelectedIds([]); setNotice('Alle stasjonsvalg er fjernet.'); }, !selected.length)),
+                h('p', { className: 'text-sm text-gray-600 mt-2' }, 'Velg alle gjelder hele trefflisten, også treff som ikke er vist ennå. Valg utenfor søket beholdes.'),
                 h('p', { className: 'text-sm text-gray-600 mt-4', role: 'status' }, filtered.length.toLocaleString('nb-NO') + ' treff · ' + stations.length.toLocaleString('nb-NO') + ' stasjoner i oversikten'),
                 h('div', { className: 'traffic-results' }, filtered.slice(0, limit).map(point => h('button', {
-                    key: point.id, type: 'button', className: 'ssb-table-result', 'aria-pressed': selectedIds.includes(point.id), onClick: () => toggle(point),
-                    disabled: !selectedIds.includes(point.id) && selected.length >= MAX_TRAFFIC_POINTS
-                }, h('span', { className: 'traffic-pick', 'aria-hidden': true }, selectedIds.includes(point.id) ? '✓' : '+'),
+                    key: point.id, type: 'button', className: 'ssb-table-result', 'aria-pressed': selectedSet.has(point.id), onClick: () => toggle(point)
+                }, h('span', { className: 'traffic-pick', 'aria-hidden': true }, selectedSet.has(point.id) ? '✓' : '+'),
                 h('span', null, h('strong', null, point.name),
                     h('span', { className: 'ssb-table-meta' }, [point.road, point.municipality?.name, point.county?.name].filter(Boolean).join(' · ')),
                     h('span', { className: 'ssb-table-meta' }, point.id + ' · ' + (point.trafficType === 'BICYCLE' ? 'Sykkel' : 'Motorkjøretøy') + ' · ' + (point.frequency === 'CONTINUOUS' ? 'Kontinuerlig måling' : 'Periodiske målinger')),
                     h('span', { className: 'ssb-table-meta' }, 'Første data: ' + date(point.firstData) + ' · Siste timedata: ' + date(point.latestHour))),
-                h('span', { className: 'ssb-table-id' }, selectedIds.includes(point.id) ? 'Valgt' : 'Velg')))),
+                h('span', { className: 'ssb-table-id' }, selectedSet.has(point.id) ? 'Valgt' : 'Velg')))),
                 !busy && !filtered.length && h('p', { className: 'mt-4' }, 'Ingen treff. Prøv et annet søk, fylke eller fjern avgrensningen til stasjoner i drift.'),
                 h('div', { className: 'ssb-actions mt-4' },
                     filtered.length > limit && button('Vis flere målestasjoner', () => setLimit(prev => prev + 50)),
@@ -129,6 +158,7 @@ export function VegvesenBuilder() {
                 h('div', { className: 'ssb-summary' },
                     h('p', null, intervalMode ? 'Datoene gjelder hele norske kalenderdager, inkludert til-datoen. Sommer- og vintertid håndteres automatisk.' : 'Gjennomsnittlig døgntrafikk er passeringer per døgn, ikke summen av trafikken i måneden eller året.'),
                     h('p', { className: 'text-sm' }, 'Dekningsgrad følger med i resultatet. Manglende målinger beholdes som null; de erstattes ikke med 0. Stasjoner kan ha avbrudd eller mangle data i valgt periode.'),
+                    selected.length > 20 && h('p', { className: 'text-sm' }, 'Mange valgte stasjoner gir flere API-kall og kan bruke lengre tid i Power BI.'),
                     validation && h('p', { className: 'ssb-validation', role: 'status' }, validation)),
                 h('div', { className: 'ssb-actions' }, button('Endre målestasjoner', () => setStep(1)), button('Lag Power Query-kode →', () => setStep(3), Boolean(validation), true))),
             step === 3 && code && h('section', { className: 'card' },

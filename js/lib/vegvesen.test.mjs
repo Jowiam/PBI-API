@@ -33,11 +33,20 @@ test('traffic queries use typed GraphQL variables and pageInfo for complete inte
 });
 
 test('traffic selection rejects invalid dates, years, duplicate points and unknown resolutions', () => {
-    assert.throws(() => validateTrafficOptions([], options), /målestasjoner/);
+    assert.throws(() => validateTrafficOptions([], options), /målestasjon/);
     assert.throws(() => validateTrafficOptions([point, point], options), /flere ganger/);
     assert.throws(() => validateTrafficOptions([point], { ...options, startDate: '2025-01-10' }), /Til-dato/);
     assert.throws(() => validateTrafficOptions([point], { ...options, mode: 'nope' }), /datatype/);
     assert.throws(() => validateTrafficOptions([point], { ...options, mode: 'adt', startYear: 2026, endYear: 2025 }), /årsintervall/);
+});
+
+test('traffic exports support selections beyond the former 20-station cap', () => {
+    const points = Array.from({ length: 65 }, (_, index) => ({ ...point, id: 'station' + index }));
+    assert.doesNotThrow(() => validateTrafficOptions(points, options));
+    const code = trafficPowerQuery(points, options);
+    assert.match(code, /id = "station0"/);
+    assert.match(code, /id = "station64"/);
+    assert.equal((code.match(/id = "station\d+"/g) || []).length, 65);
 });
 
 test('traffic M code follows all cursors, rejects GraphQL errors and preserves quality metrics and nulls', () => {

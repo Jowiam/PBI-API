@@ -136,7 +136,12 @@ av Udir når spørringen kjøres; filtre kan variere mellom skoleår og skoler.
 1. Velg **Vegvesenet · Trafikkdata**. Søk etter målestasjon, ID, vegnummer,
    kommune eller fylke. Søk på `E6` finner også vegreferanser skrevet `EV6`.
 2. Avgrens eventuelt til fylke, motorkjøretøy/sykkel og stasjoner i drift.
-   Velg mellom 1 og 20 stasjoner. Stasjonsstatus og datatilgjengelighet er
+   Kommunelisten følger valgt fylke. **Velg alle treff** velger hele
+   søkeresultatet, også treff som ikke er vist ennå. Andre valg beholdes.
+   **Fjern valgte treff** fjerner bare treffene i gjeldende søk, mens
+   **Tøm alle valg** fjerner alle stasjonsvalg. Den tidligere grensen på
+   20 stasjoner er fjernet. Store utvalg kan ta lengre tid i Power BI.
+   Stasjonsstatus og datatilgjengelighet er
    basert på den lagrede oversikten, ikke et live oppslag på nettsiden.
 3. Velg datatype: trafikkmengde per time, per døgn, gjennomsnittlig
    døgntrafikk per måned, eller årsdøgntrafikk (ÅDT).

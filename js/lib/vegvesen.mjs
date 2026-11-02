@@ -1,5 +1,4 @@
 export const TRAFFIC_API = 'https://trafikkdata-api.atlas.vegvesen.no/';
-export const MAX_TRAFFIC_POINTS = 20;
 export const TRAFFIC_MODES = {
     hour: 'Trafikkmengde per time', day: 'Trafikkmengde per døgn',
     monthly: 'Gjennomsnittlig døgntrafikk per måned', adt: 'Årsdøgntrafikk (ÅDT)'
@@ -28,7 +27,7 @@ export function osloMidnight(value) {
 }
 
 export function validateTrafficOptions(points, options) {
-    if (!points.length || points.length > MAX_TRAFFIC_POINTS) throw new Error('Velg mellom 1 og ' + MAX_TRAFFIC_POINTS + ' målestasjoner.');
+    if (!points.length) throw new Error('Velg minst én målestasjon.');
     if (new Set(points.map(point => point.id)).size !== points.length) throw new Error('Samme målestasjon er valgt flere ganger.');
     if (points.some(point => !/^[A-Za-z0-9_-]{1,80}$/.test(point.id))) throw new Error('Ugyldig stasjons-ID.');
     if (!Object.hasOwn(TRAFFIC_MODES, options.mode)) throw new Error('Velg en datatype.');
