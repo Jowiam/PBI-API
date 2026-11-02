@@ -8,6 +8,10 @@
 > forhåndsvisning, CSV og Power Query. Se [lokal bruksanvisning](./LES-MEG-LOKALT.md)
 > for FHI og SSB, oppstart, tester og GitHub Pages. Originaldokumentasjonen følger nedenfor.
 
+SSB-delens emneoppsett og søk er tilpasset med inspirasjon fra
+[Statistikkportalen](https://github.com/avocodetoast/statistikkportalen),
+inkludert synonymgrupper under MIT. Se [tredjepartslisenser](./THIRD-PARTY-NOTICES.md).
+
 En interaktiv web-applikasjon som gjør det enkelt å bygge og kjøre spørringer mot FHIs åpne statistikk-API.
 
 [Åpne FHI og SSB – publisert versjon](https://jowiam.github.io/PBI-API/)

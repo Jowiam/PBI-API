@@ -1,6 +1,6 @@
 import {
     SUBJECT_GROUPS, loadSSBCatalog, filterCatalog, topicChildren,
-    sortCatalog, recentTableGroups, osloDate
+    sortCatalog, recentTableGroups, osloDate, FREQUENCIES
 } from '../lib/ssbCatalog.mjs';
 
 const { createElement: h, useState, useEffect, useMemo } = React;
@@ -29,6 +29,9 @@ function TableResult({ table, onOpen, disabled }) {
             h('span', { className: 'ssb-table-meta' }, table.firstPeriod + '–' + table.lastPeriod + ' · Oppdatert ' + (osloDate(table.updated) ? dateLabel(osloDate(table.updated)) : 'ukjent')),
             h('span', { className: 'ssb-table-meta' }, (table.paths?.[0] || []).map(item => item.label).join(' / ')),
             h('span', { className: 'ssb-table-meta' }, (table.variableNames || []).join(' · ')),
+            h('span', { className: 'ssb-table-badges' },
+                h('span', null, FREQUENCIES[table.timeUnit] || 'Ukjent frekvens'),
+                h('span', null, (table.variableNames?.length || 0) + ' variabler')),
             table.discontinued && h('span', { className: 'ssb-closed-tag' }, 'Avsluttet tabell')),
         h('span', { 'aria-hidden': true }, '→'));
 }
@@ -38,12 +41,15 @@ export function SSBTableExplorer({ onOpen, disabled, headingRef }) {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
     const [attempt, setAttempt] = useState(0);
+    const [catalogInfo, setCatalogInfo] = useState(null);
     const [search, setSearch] = useState('');
     const [path, setPath] = useState([]);
     const [all, setAll] = useState(false);
     const [includeDiscontinued, setIncludeDiscontinued] = useState(false);
     const [sort, setSort] = useState('relevance');
     const [since, setSince] = useState('');
+    const [frequency, setFrequency] = useState('');
+    const [smart, setSmart] = useState(false);
     const [page, setPage] = useState(1);
     const [filtersOpen, setFiltersOpen] = useState(false);
     const pageSize = 20;
@@ -51,25 +57,32 @@ export function SSBTableExplorer({ onOpen, disabled, headingRef }) {
     useEffect(() => {
         let disposed = false;
         setLoading(true); setLoadError('');
-        loadSSBCatalog().then(data => { if (!disposed) setCatalog(data); }).catch(() => {
+        loadSSBCatalog({ refresh: attempt > 0 }).then(data => {
+            if (!disposed) { setCatalog(data.tables); setCatalogInfo(data); }
+        }).catch(() => {
             if (!disposed) setLoadError('Kunne ikke hente tabelloversikten fra SSB. Prøv igjen, eller åpne en tabell direkte med et femsifret tabellnummer.');
         }).finally(() => { if (!disposed) setLoading(false); });
         return () => { disposed = true; };
     }, [attempt]);
 
     const included = useMemo(() => filterCatalog(catalog, { includeDiscontinued }), [catalog, includeDiscontinued]);
-    const matched = useMemo(() => filterCatalog(catalog, { term: search, includeDiscontinued, since }), [catalog, search, includeDiscontinued, since]);
+    const searchMatches = useMemo(() => filterCatalog(catalog, { term: search, includeDiscontinued, since, smart }), [catalog, search, includeDiscontinued, since, smart]);
+    const matched = useMemo(() => filterCatalog(searchMatches, { includeDiscontinued: true, frequency }), [searchMatches, frequency]);
+    const frequencyCounts = useMemo(() => filterCatalog(searchMatches, { path, includeDiscontinued: true }).reduce((counts, table) => {
+        counts[table.timeUnit] = (counts[table.timeUnit] || 0) + 1;
+        return counts;
+    }, {}), [searchMatches, path]);
     const roots = useMemo(() => topicChildren(included), [included]);
     const rootMap = useMemo(() => new Map(roots.map(node => [node.id, node])), [roots]);
     const children = useMemo(() => topicChildren(matched, path), [matched, path]);
     const filtered = useMemo(() => sortCatalog(filterCatalog(matched, { path, includeDiscontinued: true }), sort, search), [matched, path, sort, search]);
     const recent = useMemo(() => recentTableGroups(included), [included]);
-    const showingResults = all || Boolean(search.trim()) || Boolean(path.length) || Boolean(since);
+    const showingResults = all || Boolean(search.trim()) || Boolean(path.length) || Boolean(since) || Boolean(frequency);
     const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
     const currentPage = Math.min(page, pageCount);
 
     function choosePath(next) { setPath(next); setPage(1); setAll(true); }
-    function reset() { setSearch(''); setPath([]); setAll(false); setSince(''); setPage(1); }
+    function reset() { setSearch(''); setPath([]); setAll(false); setSince(''); setFrequency(''); setPage(1); }
     function searchSubmit(event) {
         event.preventDefault();
         if (/^\d{5}$/.test(search.trim())) onOpen(search.trim());
@@ -97,8 +110,14 @@ export function SSBTableExplorer({ onOpen, disabled, headingRef }) {
             h('div', { className: 'ssb-discovery-options' },
                 h('label', { className: 'ssb-checkbox' }, h('input', { type: 'checkbox', checked: includeDiscontinued,
                     onChange: event => { setIncludeDiscontinued(event.target.checked); setPage(1); } }), 'Ta med avsluttede tabeller'),
-                h('button', { className: 'ssb-text-button', type: 'button', disabled, onClick: () => { setAll(true); setPath([]); setSearch(''); setSince(''); setPage(1); } }, 'Se alle tabeller →'))),
-        loading && h('p', { className: 'ssb-message', role: 'status' }, 'Henter emner og tabelloversikt fra SSB … Dette gjøres én gang per besøk.'),
+                h('label', { className: 'ssb-checkbox', title: 'Utvid søket med synonymer, for eksempel BNP, KPI og VGS.' },
+                    h('input', { type: 'checkbox', checked: smart, onChange: event => { setSmart(event.target.checked); setPage(1); } }), 'Smart søk · forkortelser og synonymer'),
+                h('button', { className: 'ssb-text-button', type: 'button', disabled, onClick: () => { reset(); setAll(true); } }, 'Se alle tabeller →')),
+            catalogInfo && h('div', { className: 'ssb-catalog-status' },
+                h('span', null, 'Tabelloversikt fra ' + new Date(catalogInfo.savedAt).toLocaleString('nb-NO', { timeZone: 'Europe/Oslo', dateStyle: 'short', timeStyle: 'short' })),
+                h('button', { className: 'ssb-text-button', type: 'button', disabled: disabled || loading, onClick: () => setAttempt(prev => prev + 1) }, 'Oppdater oversikt'))),
+        loading && h('p', { className: 'ssb-message', role: 'status' }, 'Henter emner og tabelloversikt fra SSB …'),
+        !loading && catalogInfo?.stale && h('p', { className: 'ssb-message', role: 'status' }, 'Kunne ikke oppdatere oversikten fra SSB. Viser sist lagrede oversikt. Prøv «Oppdater oversikt» senere.'),
         loadError && h('div', { className: 'ssb-message ssb-error', role: 'alert' }, loadError,
             h('button', { type: 'button', className: 'btn btn-outline', onClick: () => setAttempt(prev => prev + 1) }, 'Prøv igjen')),
         !showingResults && !loading && !loadError && h(React.Fragment, null,
@@ -143,6 +162,9 @@ export function SSBTableExplorer({ onOpen, disabled, headingRef }) {
                 path.length > 0 && children.length > 0 && h('section', { className: 'ssb-subtopic-section', 'aria-label': 'Underemner' },
                     h('h3', null, 'Underemner'), h('div', { className: 'ssb-subtopics' }, children.map(node => browseButton(node, path)))),
                 h('div', { className: 'ssb-results-filters' },
+                    h('label', null, 'Frekvens', h('select', { className: 'input', 'aria-label': 'Frekvens', value: frequency, onChange: event => { setFrequency(event.target.value); setPage(1); } },
+                        h('option', { value: '' }, 'Alle frekvenser'),
+                        Object.entries(FREQUENCIES).map(([key, label]) => h('option', { key, value: key }, label + ' (' + number(frequencyCounts[key] || 0) + ')')))),
                     h('label', null, 'Sorter etter', h('select', { className: 'input', value: sort, onChange: event => { setSort(event.target.value); setPage(1); } },
                         h('option', { value: 'relevance' }, 'Relevans'), h('option', { value: 'updated' }, 'Sist oppdatert'), h('option', { value: 'title' }, 'Tittel A–Å'))),
                     h('label', null, 'Oppdateringsdato', h('select', { className: 'input', value: since, onChange: event => { setSince(event.target.value); setPage(1); } },

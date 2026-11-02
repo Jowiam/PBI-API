@@ -1,4 +1,6 @@
 import { SSB_BASE, fetchSSB } from './ssb.mjs';
+import { normalizeSearch as normalize, searchTerms } from './searchSynonyms.mjs';
+import { CATALOG_CACHE_TTL, validCachedCatalog, freshCachedCatalog, readCatalogCache, writeCatalogCache } from './catalogCache.mjs';
 
 // Broad subject groups follow the grouping used by SSB and Statistikkportalen.
 export const SUBJECT_GROUPS = [
@@ -10,8 +12,9 @@ export const SUBJECT_GROUPS = [
     { title: 'Økonomi', codes: ['bf', 'nk', 'os', 'pp', 'ut'], icon: 'economy' }
 ];
 
-const normalize = value => String(value ?? '').toLocaleLowerCase('nb-NO').normalize('NFKC');
 let catalogPromise;
+let loadedAt = 0;
+export const FREQUENCIES = { Annual: 'Årlig', Quarterly: 'Kvartalsvis', Monthly: 'Månedlig', Weekly: 'Ukentlig', Other: 'Andre perioder' };
 
 export function prepareCatalog(tables) {
     return tables.map(table => ({
@@ -21,9 +24,16 @@ export function prepareCatalog(tables) {
     }));
 }
 
-export function loadSSBCatalog() {
+export function loadSSBCatalog({ refresh = false } = {}) {
+    if (refresh || (loadedAt && Date.now() - loadedAt >= CATALOG_CACHE_TTL)) { catalogPromise = null; loadedAt = 0; }
     if (!catalogPromise) {
-        catalogPromise = (async () => {
+        const pending = (async () => {
+            const cached = await readCatalogCache();
+            if (!refresh && freshCachedCatalog(cached)) {
+                loadedAt = cached.savedAt;
+                return { tables: prepareCatalog(cached.tables), savedAt: cached.savedAt, stale: false };
+            }
+            try {
             const params = new URLSearchParams({ lang: 'no', includeDiscontinued: 'true', pageSize: '10000', pageNumber: '1' });
             const first = await fetchSSB(SSB_BASE + '/tables?' + params, { signal: AbortSignal.timeout(60000) });
             let tables = first.tables;
@@ -33,8 +43,22 @@ export function loadSSBCatalog() {
                 const next = await fetchSSB(SSB_BASE + '/tables?' + params, { signal: AbortSignal.timeout(60000) });
                 tables = tables.concat(next.tables);
             }
-            return prepareCatalog(tables);
-        })().catch(error => { catalogPromise = null; throw error; });
+            const compact = tables.map(({ id, label, updated, firstPeriod, lastPeriod, variableNames, paths, timeUnit, discontinued, sortCode }) =>
+                ({ id, label: label || id, updated, firstPeriod, lastPeriod, variableNames, paths: paths || [], timeUnit, discontinued, sortCode }));
+            if (!compact.length) throw new Error('SSB returnerte en tom tabelloversikt.');
+            const record = { version: 1, savedAt: Date.now(), tables: compact };
+            await writeCatalogCache(record);
+            loadedAt = record.savedAt;
+            return { tables: prepareCatalog(compact), savedAt: record.savedAt, stale: false };
+            } catch (error) {
+                if (!validCachedCatalog(cached)) throw error;
+                // A saved catalogue can still be browsed while SSB is unavailable.
+                loadedAt = 0;
+                if (catalogPromise === pending) catalogPromise = null;
+                return { tables: prepareCatalog(cached.tables), savedAt: cached.savedAt, stale: true };
+            }
+        })().catch(error => { if (catalogPromise === pending) catalogPromise = null; throw error; });
+        catalogPromise = pending;
     }
     return catalogPromise;
 }
@@ -44,12 +68,13 @@ export function matchesPath(table, selection) {
         selection.every((node, index) => path[index]?.id === node.id));
 }
 
-export function filterCatalog(tables, { term = '', path = [], includeDiscontinued = false, since = '' } = {}) {
-    const words = normalize(term).trim().split(/\s+/).filter(Boolean);
+export function filterCatalog(tables, { term = '', path = [], includeDiscontinued = false, since = '', frequency = '', smart = false } = {}) {
+    const words = searchTerms(term, smart);
     return tables.filter(table =>
         (includeDiscontinued || !table.discontinued) && matchesPath(table, path) &&
         (!since || osloDate(table.updated) >= since) &&
-        words.every(word => table.searchText.includes(word)));
+        (!frequency || table.timeUnit === frequency) &&
+        words.every(variants => variants.some(word => table.searchText.includes(word))));
 }
 
 export function topicChildren(tables, parent = []) {

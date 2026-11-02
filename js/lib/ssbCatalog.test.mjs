@@ -51,3 +51,18 @@ test('recent publications show three latest dates with one entry per table', () 
     assert.equal(groups[0].topics.flatMap(topic => topic.tables).length, 2);
     assert.equal(groups.at(-1).date, '2026-10-29');
 });
+
+test('smart search expands abbreviations without broadening normal search', () => {
+    const data = prepareCatalog([
+        { id: '10000', label: 'Bruttonasjonalprodukt etter næring', variableNames: ['år'], paths: [], timeUnit: 'Annual' },
+        { id: '10001', label: 'Konsumprisindeks', variableNames: ['måned'], paths: [], timeUnit: 'Monthly' },
+        { id: '10002', label: 'Videregående opplæring i Tromsø', variableNames: ['skole'], paths: [], timeUnit: 'Annual' }
+    ]);
+    assert.equal(filterCatalog(data, { term: 'BNP' }).length, 0);
+    assert.equal(filterCatalog(data, { term: 'BNP', smart: true })[0].id, '10000');
+    assert.equal(filterCatalog(data, { term: 'KPI', smart: true })[0].id, '10001');
+    assert.equal(filterCatalog(data, { term: 'VGS tromso', smart: true })[0].id, '10002');
+    assert.equal(filterCatalog(data, { term: 'vgs ukjent', smart: true }).length, 0);
+    assert.equal(filterCatalog(data, { frequency: 'Monthly' })[0].id, '10001');
+    assert.equal(filterCatalog(data, { term: 'BNP', smart: true, frequency: 'Monthly' }).length, 0);
+});

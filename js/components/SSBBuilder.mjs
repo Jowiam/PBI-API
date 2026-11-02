@@ -172,8 +172,8 @@ export function SSBBuilder() {
         h('main', { className: 'container', id: 'ssb-content' },
             h('header', { className: 'ssb-header' },
                 h('p', { className: 'ssb-eyebrow' }, 'STATISTISK SENTRALBYRÅ'),
-                h('h1', null, 'Finn tallene du trenger fra SSB'),
-                h('p', { className: 'text-gray-600' }, 'Søk etter en tabell, velg data og ta resultatet videre til Power BI, Excel eller CSV.')),
+                h('h1', null, 'Statistikkbanken · SSB'),
+                h('p', { className: 'text-gray-600' }, 'Finn tabeller, velg data og bygg spørringer til Power BI eller Excel.')),
             h('nav', { className: 'ssb-steps', 'aria-label': 'Trinn i SSB-spørring' },
                 ['Finn tabell', 'Velg data', 'Hent og eksporter'].map((label, index) => h('button', {
                     key: label, className: step === index + 1 ? 'active' : '',

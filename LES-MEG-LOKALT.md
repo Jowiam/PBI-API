@@ -55,10 +55,23 @@ Dette er et lite startutvalg; kontroller at det svarer på spørsmålet ditt.
 Søk for eksempel etter **Troms** i regionlisten i tabell **07459**.
 Forsiden viser også nylig oppdaterte tabeller gruppert etter publiseringsdag
 og statistikk. Åpne en gruppe for å velge en tabell direkte.
-Tabelloversikten hentes fra SSB én gang per besøk og gjenbrukes ved søk og
-emnefiltrering. Variabelverdier søker du i etter at en tabell er åpnet.
-Emneoppsettet og publiseringsoversikten er inspirert av
-[Statistikkportalen](https://statistikkportalen.no/#home); ingen kode er kopiert derfra.
+Tabelloversikten lagres i nettleseren og gjenbrukes i opptil seks timer.
+**Oppdater oversikt** henter en fersk oversikt med én gang. Hvis lagring er
+blokkert, hentes oversikten direkte fra SSB. Ved midlertidig API-feil kan
+en eldre lagret oversikt fortsatt brukes; dette vises tydelig på siden.
+Selve datauttrekket hentes alltid fra SSB når du velger forhåndsvisning.
+Variabelverdier søker du i etter at en tabell er åpnet.
+
+Søkeresultatene kan også filtreres etter frekvens: årlig, kvartalsvis,
+månedlig, ukentlig eller andre perioder. **Smart søk** utvider søkeord med
+forkortelser og synonymer, for eksempel BNP → bruttonasjonalprodukt,
+KPI → konsumprisindeks og VGS → videregående opplæring.
+
+Det kompakte emneoppsettet, publiseringsoversikten og søkeoppsettet er
+tilpasset med utgangspunkt i
+[Statistikkportalens kildekode](https://github.com/avocodetoast/statistikkportalen).
+Synonymgruppene er gjenbrukt under MIT-lisensen; opphavsrett og lisens står
+i `THIRD-PARTY-NOTICES.md`.
 Grensen på 800 000 dataceller kontrolleres før uttrekk. Ved begrensning på
 antall forespørsler fra SSB vises en melding om å vente før nytt forsøk.
 
