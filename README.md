@@ -31,8 +31,9 @@ omfatter ikke alle datatjenestene fra Udir eller Statens vegvesen.
 5. I Power BI: åpne **Transformer data → Ny kilde → Tom spørring → Avansert redigering**.
 6. Erstatt innholdet med koden og velg **Anonym** som autentisering når Power BI ber om tilkobling til datakilden.
 
-For **FHI** må du velge **CSV2 eller CSV3** som responsformat når du skal
-bruke Power Query-koden. De øvrige kildene velger format gjennom kodegeneratoren.
+For **FHI** velger Power Query-koden automatisk **CSV2 med navn**, eller
+**CSV3 med koder** dersom du har valgt dette. JSON-valget gjelder JSON-spørringen;
+Power Query-koden henter alltid CSV. De øvrige kildene velger også format gjennom kodegeneratoren.
 
 Power Query-koden kan også brukes i Excel der Power Query er tilgjengelig.
 Udir og Vegvesenet har en knapp for å laste ned M-koden som en `.pq`-fil.

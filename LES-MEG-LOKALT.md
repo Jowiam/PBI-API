@@ -54,6 +54,9 @@ R-koden velger CSV-format automatisk hos FHI.
 4. For Power BI: kopier koden i Power Query-fanen til avansert redigering i
    en tom spørring i Power Query.
 
+Power Query velger automatisk CSV2 med navn, eller CSV3 med koder hvis dette
+er valgt. Du trenger ikke endre JSON-valget for å bruke Power Query-fanen.
+
 ### SSB
 
 1. Åpne SSB-fanen. Bla i de seks emnegruppene og deres underemner, søk etter

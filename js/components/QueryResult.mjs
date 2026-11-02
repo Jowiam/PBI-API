@@ -170,7 +170,7 @@ export function renderQueryResult(
                     h('li', null, 'Klikk Done/Ferdig')
                 ),
                 h('p', { className: 'text-xs mt-2', style: { fontStyle: 'italic' } },
-                    'Merk: Power Query fungerer kun med CSV-format (csv2 eller csv3).'
+                    'Power Query-koden velger CSV-format automatisk. CSV3 beholder koder; ellers brukes CSV2 med navn.'
                 )
             )
         ),
