@@ -210,6 +210,14 @@ kjøring publiserer koden fra den gamle commit-en og kan derfor erstatte
 en nyere versjon av siden. Kontroller commit-en i publiseringsjobben hvis
 SSB-fanen mangler etter publisering.
 
+Ved **Failed to get ID Token** med **socket hang up**: kontroller at
+arbeidsflyten har `pages: write` og `id-token: write` under `permissions`.
+Begge er satt i dette prosjektet. Når de er satt, tyder `socket hang up`
+på en brutt forbindelse under tokenhenting. Start en ny kjøring med
+**Run workflow → main**, eller kjør den mislykkede jobben på nytt dersom
+den gjelder nyeste commit. En `punycode`-advarsel er ikke årsaken til
+denne tokenfeilen. Publiseringssteget bruker nå `actions/deploy-pages@v5`.
+
 Testene kjøres med `node --test` fra prosjektmappen (Node.js 20 eller nyere).
 En portabel Node.js ligger lokalt under `.tools/node-v22.14.0-win-x64/` og
 kan brukes med `.\.tools\node-v22.14.0-win-x64\node.exe --test`.
