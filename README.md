@@ -17,6 +17,7 @@ skrive API-kallene selv.
 | **SSB** | Tabeller fra Statistikkbanken via PxWebApi v2 | Søk eller bla i emner og underemner. Filtrer på frekvens og oppdateringsdato, velg variabelverdier og lag Power Query-, JSON- eller GET-spørringer. Forhåndsvisning og CSV støttes. |
 | **Udir** | Elevundersøkelsen: indikatorer, tema, mobbing og deltakelse for grunnskole og videregående | Velg tabell og filtre som skoleår, enhet og trinn. Lag Power Query-kode som henter alle sidene og kontrollerer radantallet. |
 | **Statens vegvesen** | Trafikkdata fra målestasjoner: trafikkmengde per time/døgn, månedlig døgnsnitt og årsdøgntrafikk (ÅDT) | Søk etter stasjoner, filtrer på fylke, kommune og trafikktype, og lag Power Query-kode for valgte stasjoner og perioder. Sideinndeling og kvalitetsmål håndteres i koden. |
+| **Politiet** | Operative meldinger fra Politiloggen | Filtrer på distrikt, kommune, kategori, status og periode. Lag Power Query-kode eller R-skript som henter alle tilgjengelige sider. |
 
 Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
 i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et. Verktøyet
@@ -36,11 +37,11 @@ For **FHI** velger Power Query-koden automatisk **CSV2 med navn**, eller
 Power Query-koden henter alltid CSV. De øvrige kildene velger også format gjennom kodegeneratoren.
 
 Power Query-koden kan også brukes i Excel der Power Query er tilgjengelig.
-Udir og Vegvesenet har en knapp for å laste ned M-koden som en `.pq`-fil.
+Udir, Vegvesenet og Politiet har en knapp for å laste ned M-koden som en `.pq`-fil.
 
 ## Hent data til R
 
-Alle fire datakildene kan generere et komplett R-skript med det samme utvalget
+Alle fem datakildene kan generere et komplett R-skript med det samme utvalget
 som du har valgt på nettsiden.
 
 1. Velg tabell eller stasjoner og tilpass filtrene.
@@ -114,6 +115,20 @@ med håndtering av sommer- og vintertid. Time- og døgndata hentes med alle
 sidepekere, månedsdata hentes for hvert valgt år, og ÅDT filtreres til
 ønsket årsintervall. Uttrekket gjelder totalen ved hver stasjon.
 
+### Politiet · Politiloggen
+
+Velg distrikt, kommune, kategori, status og dynamisk eller fast periode i den
+nye fanen. Ingen filtervalg betyr alle verdier. Standardperioden er siste sju
+døgn, beregnet på nytt ved hver oppdatering i Power BI eller R. Faste datoer
+følger hele norske kalenderdager. Kopier koden eller last ned `.pq`/`.R`.
+
+Uttrekket har én rad per melding og beholder `threadId` for å knytte sammen
+oppdateringer om samme hendelse. Politiloggen er ikke kriminalstatistikk.
+Historikk avhenger av hva API-et gjør tilgjengelig; meldinger kan endres eller
+fjernes. Koden henter alle tilgjengelige sider med `Skip`/`Take` og
+`hasMoreResults`, men et uttrekk mens meldinger endres er ikke et garantert
+øyeblikksbilde. Se [detaljer om Politiloggen](data/politiet/README.md).
+
 ## Hvordan hentes dataene?
 
 Nettsiden kjører som en statisk applikasjon på GitHub Pages. Det er ingen
@@ -125,6 +140,7 @@ egen backend å starte eller drifte for denne løsningen.
 | SSB | Hentes fra SSB og mellomlagres i nettleseren i opptil seks timer. Kan oppdateres manuelt. | På nettsiden og i Power BI |
 | Udir | Lagrede metadata i prosjektet, oppdatert med et Python-skript | I Power BI |
 | Vegvesenet | Lagret stasjonsoversikt i prosjektet, oppdatert med et Python-skript | I Power BI |
+| Politiet | Lagret oversikt over distrikter, kommuner og kategorier, oppdatert med et Python-skript | I Power BI eller R |
 
 Selve datauttrekket i Power Query hentes direkte fra den valgte datakilden.
 De lokale metadatafilene er oversikter over tabeller, filtre og stasjoner,
@@ -174,10 +190,11 @@ filtre, eller når Vegvesenets stasjonsoversikt skal oppdateres:
 ```powershell
 python scripts/update_udir_metadata.py
 python scripts/update_vegvesen_metadata.py
+python scripts/update_politiet_metadata.py
 ```
 
 Skriptene henter offentlige metadata og oppdaterer `data/udir/` og
-`data/vegvesen/`. De utfører ingen commit, push eller publisering.
+`data/vegvesen/` og `data/politiet/`. De utfører ingen commit, push eller publisering.
 Tidspunktet for innhenting vises i de aktuelle fanene.
 
 Ta med de oppdaterte metadatafilene når du selv committer og pusher.
@@ -222,6 +239,7 @@ spørringen i Power BI.
 | `styles/` | Utseende og mobiltilpasning |
 | `data/udir/` | Udirs tabell- og filtermetadata |
 | `data/vegvesen/` | Vegvesenets stasjonsoversikt |
+| `data/politiet/` | Politiets distrikter, kommuner og kategorier |
 | `scripts/` | Oppdatering av lokale metadata |
 | `API-powerbi.py` | Lokal HTTP-server |
 | `.github/workflows/` | Tester og publisering på GitHub Pages |
@@ -251,3 +269,4 @@ Datakildenes egne vilkår og krav til kildehenvisning gjelder for dataene.
 - [SSB – brukerveiledning for PxWebApi v2](https://www.ssb.no/api/pxwebapiv2)
 - [Udir – API-konsoll og dokumentasjon](https://apikonsoll.statistikkbanken.udir.no/)
 - [Statens vegvesen – om Trafikkdata-API-et](https://trafikkdata.atlas.vegvesen.no/om-api)
+- [Politiet – Politiloggen API](https://api.politiloggen.politiet.no/index.html)

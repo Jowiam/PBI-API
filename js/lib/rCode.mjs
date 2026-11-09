@@ -1,6 +1,7 @@
 import { ssbDataURL } from './ssb.mjs';
 import { UDIR_BASE } from './udir.mjs';
 import { TRAFFIC_API, TRAFFIC_MODES, validateTrafficOptions, trafficRequest } from './vegvesen.mjs';
+import { POLITIET_API, POLITIET_COLUMNS, politietParameters } from './politiet.mjs';
 
 const rString = value => {
     const chars = Array.from(String(value));
@@ -212,6 +213,39 @@ for (column in c("Fra", "Til")) {
 }
 `;
     return script;
+}
+
+export function politietRCode(options) {
+    const parameters = politietParameters(options);
+    for (const key of ['DateFrom', 'DateTo', 'Take', 'Skip']) parameters.delete(key);
+    const dates = options.period === 'rolling'
+        ? 'to <- Sys.time()\nfrom <- to - ' + Number(options.days) + ' * 86400\ndate_from <- format(from, "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC")\ndate_to <- format(to, "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC")\n'
+        : 'date_from <- ' + rString(politietParameters(options).get('DateFrom')) + '\ndate_to <- ' + rString(politietParameters(options).get('DateTo')) + '\n';
+    return prelude('Politiet, Politiloggen (NLOD 2.0)') + requestHelpers + dates +
+        'base_url <- ' + rString(POLITIET_API + '/messages?' + parameters.toString()) + '\n' +
+        'columns <- c(' + POLITIET_COLUMNS.map(rString).join(', ') + ')\n' + String.raw`
+# Én rad per melding. threadId knytter oppdateringer til samme hendelse.
+rows <- list()
+skip <- 0L
+repeat {
+  page <- get_json(base_url, list(DateFrom = date_from, DateTo = date_to, Take = 50L, Skip = skip))
+  if (!is.list(page$messages) || !is.logical(page$hasMoreResults) || length(page$hasMoreResults) != 1L || is.na(page$hasMoreResults)) {
+    stop("Uventet respons fra Politiloggen; uttrekket er avbrutt.")
+  }
+  batch <- page$messages
+  if (isTRUE(page$hasMoreResults) && length(batch) == 0L) stop("Tom side med flere treff.")
+  rows <- c(rows, batch)
+  if (!isTRUE(page$hasMoreResults)) break
+  skip <- skip + length(batch)
+}
+data <- rows_to_df(rows, columns)
+data <- data[!duplicated(data$id), , drop = FALSE]
+for (column in c("createdOn", "updatedOn")) {
+  text <- sub("Z$", "+0000", as.character(data[[column]]))
+  text <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", text)
+  data[[column]] <- as.POSIXct(text, format = "%Y-%m-%dT%H:%M:%OS%z", tz = "Europe/Oslo")
+}
+` + finish;
 }
 
 export function downloadRScript(code, name) {

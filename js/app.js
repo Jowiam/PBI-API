@@ -2,6 +2,7 @@ import { Icons, getSourceIcon } from './components/icons.mjs';
 import { SSBBuilder } from './components/SSBBuilder.mjs';
 import { UdirBuilder } from './components/UdirBuilder.mjs';
 import { VegvesenBuilder } from './components/VegvesenBuilder.mjs';
+import { PolitietBuilder } from './components/PolitietBuilder.mjs';
 import { ProjectFooter } from './components/ProjectFooter.mjs';
 import { parseTableLabelsCSV } from './lib/csv.mjs';
 import { getTableLabel, getTableCategory, flattenCategories } from './lib/tableLabels.mjs';
@@ -359,6 +360,7 @@ function StatisticsApp() {
     const [ssbOpened, setSSBOpened] = useState(false);
     const [udirOpened, setUdirOpened] = useState(false);
     const [vegvesenOpened, setVegvesenOpened] = useState(false);
+    const [politietOpened, setPolitietOpened] = useState(false);
     return h(React.Fragment, null,
         h('nav', { className: 'provider-nav', 'aria-label': 'Velg statistikkleverandør' },
             h('div', { className: 'provider-nav-inner' },
@@ -366,13 +368,15 @@ function StatisticsApp() {
                 h('button', { type: 'button', 'aria-pressed': provider === 'fhi', onClick: () => setProvider('fhi') }, 'FHI · Folkehelse'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'ssb', onClick: () => { setSSBOpened(true); setProvider('ssb'); } }, 'SSB · Statistikkbanken'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'udir', onClick: () => { setUdirOpened(true); setProvider('udir'); } }, 'Udir · Utdanning'),
-                h('button', { type: 'button', 'aria-pressed': provider === 'vegvesen', onClick: () => { setVegvesenOpened(true); setProvider('vegvesen'); } }, 'Vegvesenet · Trafikkdata')
+                h('button', { type: 'button', 'aria-pressed': provider === 'vegvesen', onClick: () => { setVegvesenOpened(true); setProvider('vegvesen'); } }, 'Vegvesenet · Trafikkdata'),
+                h('button', { type: 'button', 'aria-pressed': provider === 'politiet', onClick: () => { setPolitietOpened(true); setProvider('politiet'); } }, 'Politiet · Politiloggen')
             )
         ),
         h('div', { hidden: provider !== 'fhi' }, h(FHIQueryBuilder)),
         ssbOpened && h('div', { hidden: provider !== 'ssb' }, h(SSBBuilder)),
         udirOpened && h('div', { hidden: provider !== 'udir' }, h(UdirBuilder)),
         vegvesenOpened && h('div', { hidden: provider !== 'vegvesen' }, h(VegvesenBuilder)),
+        politietOpened && h('div', { hidden: provider !== 'politiet' }, h(PolitietBuilder)),
         h(ProjectFooter)
     );
 }
