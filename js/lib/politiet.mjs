@@ -3,13 +3,22 @@ import { calendarDate, addDays, osloMidnight } from './vegvesen.mjs';
 export const POLITIET_API = 'https://api.politiloggen.politiet.no';
 export const POLITIET_COLUMNS = ['id', 'threadId', 'category', 'district', 'municipality', 'area', 'isActive', 'text', 'createdOn', 'updatedOn', 'imageUrl', 'previouslyIncludedImage', 'isEdited'];
 
-export function validatePolitietOptions(options) {
+export function politietEarliestDate(now = new Date()) {
+    const cutoff = new Date(now);
+    cutoff.setUTCFullYear(cutoff.getUTCFullYear() - 1);
+    const localDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Oslo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(cutoff);
+    // First complete Norwegian calendar day inside the rolling one-year window.
+    return addDays(localDate, 1);
+}
+
+export function validatePolitietOptions(options, now = new Date()) {
     if (!['rolling', 'fixed'].includes(options.period)) throw new Error('Velg periode.');
     if (options.period === 'rolling') {
         if (!Number.isInteger(Number(options.days)) || options.days < 1 || options.days > 365) throw new Error('Velg mellom 1 og 365 døgn.');
     } else {
         calendarDate(options.startDate); calendarDate(options.endDate);
         if (options.startDate > options.endDate) throw new Error('Til-dato må være samme dag som eller etter fra-dato.');
+        if (options.startDate < politietEarliestDate(now)) throw new Error('Politiets API tillater ikke fra-dato mer enn ett år tilbake. Velg ' + politietEarliestDate(now) + ' eller senere for hele kalenderdager, eller bruk en dynamisk periode.');
     }
     if (!['', 'true', 'false'].includes(options.active)) throw new Error('Velg gyldig status.');
     for (const key of ['districts', 'municipalities', 'categories']) {
@@ -18,7 +27,7 @@ export function validatePolitietOptions(options) {
 }
 
 export function politietParameters(options, now = new Date()) {
-    validatePolitietOptions(options);
+    validatePolitietOptions(options, now);
     const parameters = new URLSearchParams();
     for (const [key, name] of [['districts', 'Districts'], ['municipalities', 'Municipalities'], ['categories', 'Categories']]) {
         for (const value of new Set(options[key])) parameters.append(name, value);
@@ -52,10 +61,11 @@ export function politietPowerQuery(options) {
 ${dates}
     DateText = (Value as datetimezone) as text => DateTimeZone.ToText(Value, [Format = "yyyy-MM-dd'T'HH:mm:ss.fffzzz", Culture = "en-US"]),
     Filters = ${mString(parameters.toString())},
+    CheckedFrom = if From < Date.AddYears(DateTimeZone.FixedUtcNow(), -1) then error "Politiets API tillater ikke fra-dato mer enn ett år tilbake. Velg nyere datoer eller en dynamisk periode i spørringsbyggeren." else From,
     ReadPage = (Skip as number) as record =>
         let
             Response = Json.Document(Web.Contents(${mString(POLITIET_API)}, [
-                RelativePath = "messages?" & Filters & "&" & Uri.BuildQueryString([DateFrom = DateText(From), DateTo = DateText(To), Take = "50", Skip = Text.From(Skip, "en-US")]),
+                RelativePath = "messages?" & Filters & "&" & Uri.BuildQueryString([DateFrom = DateText(CheckedFrom), DateTo = DateText(To), Take = "50", Skip = Text.From(Skip, "en-US")]),
                 Headers = [Accept = "application/json"],
                 Timeout = #duration(0, 0, 5, 0)
             ])),

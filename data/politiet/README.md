@@ -12,6 +12,10 @@ Power Query og R henter `/messages` direkte med opptil 50 meldinger per side,
 Én rad er én melding; `threadId` identifiserer tilhørende hendelsestråd.
 Tomme uttrekk beholder kolonnene. Dynamiske perioder beregnes ved hver kjøring.
 Faste datoer følger hele kalenderdager i Europe/Oslo.
+API-et avviser `DateFrom` mer enn ett år tilbake fra kjøringstidspunktet
+(HTTP 400). Fanen avviser slike datoer, og generert M-/R-kode kontrollerer
+grensen på nytt ved kjøring. En fast periode kan derfor bli for gammel;
+bruk dynamisk periode for spørringer som skal oppdateres over tid.
 
 Politiloggen er en operativ publiseringskanal. Tilgjengelig historikk bestemmes
 av API-et. Meldinger kan redigeres eller fjernes, og sideinndelingen gir ikke

@@ -225,6 +225,13 @@ export function politietRCode(options) {
         'base_url <- ' + rString(POLITIET_API + '/messages?' + parameters.toString()) + '\n' +
         'columns <- c(' + POLITIET_COLUMNS.map(rString).join(', ') + ')\n' + String.raw`
 # Én rad per melding. threadId knytter oppdateringer til samme hendelse.
+earliest <- seq(Sys.time(), by = "-1 year", length.out = 2L)[2L]
+from_text <- sub("Z$", "+0000", date_from)
+from_text <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", from_text)
+from_time <- as.POSIXct(from_text, format = "%Y-%m-%dT%H:%M:%OS%z", tz = "UTC")
+if (is.na(from_time) || from_time < earliest) {
+  stop("Politiets API tillater ikke fra-dato mer enn ett år tilbake. Velg nyere datoer eller en dynamisk periode i spørringsbyggeren.")
+}
 rows <- list()
 skip <- 0L
 repeat {

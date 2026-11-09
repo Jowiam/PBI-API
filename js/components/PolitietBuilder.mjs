@@ -1,4 +1,4 @@
-import { POLITIET_API, politietParameters, politietPowerQuery, readPolitietMetadata, validatePolitietOptions } from '../lib/politiet.mjs';
+import { POLITIET_API, politietParameters, politietPowerQuery, politietEarliestDate, readPolitietMetadata, validatePolitietOptions } from '../lib/politiet.mjs';
 import { politietRCode, downloadRScript } from '../lib/rCode.mjs';
 import { addDays } from '../lib/vegvesen.mjs';
 
@@ -78,7 +78,8 @@ export function PolitietBuilder() {
                         h('option', { value: 'rolling' }, 'Siste antall døgn (dynamisk)'), h('option', { value: 'fixed' }, 'Faste datoer'))),
                     options.period === 'rolling'
                         ? h('label', null, 'Antall døgn', h('input', { className: 'input', type: 'number', min: 1, max: 365, value: options.days, onChange: event => update('days', event.target.value) }))
-                        : h('div', { className: 'traffic-date-row' }, ['startDate', 'endDate'].map((key, i) => h('label', { key }, i ? 'Til og med' : 'Fra og med', h('input', { className: 'input', type: 'date', value: options[key], onChange: event => update(key, event.target.value) }))))),
+                        : h('div', { className: 'traffic-date-row' }, ['startDate', 'endDate'].map((key, i) => h('label', { key }, i ? 'Til og med' : 'Fra og med', h('input', { className: 'input', type: 'date', min: politietEarliestDate(), value: options[key], onChange: event => update(key, event.target.value) }))))),
+                h('p', { className: 'text-sm text-gray-600' }, 'Politiets API tillater fra-dato maksimalt ett år tilbake fra kjøringstidspunktet. For faste, hele kalenderdager: velg ' + politietEarliestDate() + ' eller senere. En lagret spørring med faste datoer kan derfor bli for gammel ved senere oppdatering.'),
                 h('p', { className: 'ssb-summary' }, options.period === 'rolling' ? 'Perioden beregnes på nytt ved hver kjøring i Power BI eller R. Store perioder kan kreve mange API-kall og gir ikke tilgang til meldinger som ikke lenger finnes i API-et.' : 'Faste datoer omfatter hele norske kalenderdager, inkludert til-datoen. Datoene endres ikke ved oppdatering.'),
                 validation && h('p', { role: 'alert', className: 'ssb-validation' }, validation),
                 h('div', { className: 'ssb-actions' }, button('Lag Power Query-kode →', () => { setOutput('m'); setStep(2); }, !!validation, true), button('Lag R-kode →', () => { setOutput('r'); setStep(2); }, !!validation))),

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { politietParameters, politietPowerQuery, validatePolitietOptions } from './politiet.mjs';
+import { politietParameters, politietPowerQuery, politietEarliestDate, validatePolitietOptions } from './politiet.mjs';
 import { politietRCode } from './rCode.mjs';
 import { readFile } from 'node:fs/promises';
 
@@ -28,9 +28,20 @@ test('Politiloggen: gjentatte query-parametre og norske tegn følger OpenAPI', (
 
 test('Politiloggen: faste kalenderdager håndterer begge sommertidsoverganger', () => {
     for (const [date, hours] of [['2026-03-29', 23], ['2026-10-25', 25]]) {
-        const params = politietParameters({ ...base, period: 'fixed', startDate: date, endDate: date });
+        const params = politietParameters({ ...base, period: 'fixed', startDate: date, endDate: date }, new Date('2026-11-09T12:00:00Z'));
         assert.equal(new Date(params.get('DateTo')) - new Date(params.get('DateFrom')) + 1, hours * 3600000);
     }
+});
+
+test('Politiloggen: avviser eldre fra-dato og beskytter lagrede skript ved senere kjøring', () => {
+    const now = new Date('2026-11-09T12:00:00Z');
+    const fixed = { ...base, period: 'fixed', startDate: '2019-01-02', endDate: '2026-11-09' };
+    assert.throws(() => validatePolitietOptions(fixed, now), /ett år tilbake/);
+    assert.equal(politietEarliestDate(now), '2025-11-10');
+    assert.throws(() => validatePolitietOptions({ ...fixed, startDate: '2025-11-09' }, now), /ett år tilbake/);
+    assert.doesNotThrow(() => validatePolitietOptions({ ...fixed, startDate: '2025-11-10' }, now));
+    assert.match(politietPowerQuery(base), /CheckedFrom = if From < Date.AddYears/);
+    assert.match(politietRCode(base), /from_time < earliest/);
 });
 
 test('Politiloggen: ugyldige datoer og perioder blir avvist', () => {
