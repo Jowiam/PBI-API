@@ -16,11 +16,11 @@ skrive API-kallene selv.
 | **FHI** | Tabeller fra FHIs åpne statistikk-API | Velg kilde, tabell, variabler, geografi og periode. Lag Power Query-/JSON-spørringer, forhåndsvis data og last ned CSV. |
 | **SSB** | Tabeller fra Statistikkbanken via PxWebApi v2 | Søk eller bla i emner og underemner. Filtrer på frekvens og oppdateringsdato, velg variabelverdier og lag Power Query-, JSON- eller GET-spørringer. Forhåndsvisning og CSV støttes. |
 | **Udir** | Elevundersøkelsen: indikatorer, tema, mobbing og deltakelse for grunnskole og videregående | Velg tabell og filtre som skoleår, enhet og trinn. Lag Power Query-kode som henter alle sidene og kontrollerer radantallet. |
-| **Statens vegvesen** | Trafikkdata fra målestasjoner: trafikkmengde per time/døgn, månedlig døgnsnitt og årsdøgntrafikk (ÅDT) | Søk etter stasjoner, filtrer på fylke, kommune og trafikktype, og lag Power Query-kode for valgte stasjoner og perioder. Sideinndeling og kvalitetsmål håndteres i koden. |
+| **Statens vegvesen** | Trafikkdata fra målestasjoner og åpne vegobjekter fra NVDB API Les V4 | Velg **Trafikkdata** eller **NVDB** under Vegvesenet. Søk etter stasjoner eller vegobjekttyper, filtrer utvalget og lag Power Query-kode eller R-skript. NVDB støtter forhåndsvisning og filtre på fylke, kommune og veg. |
 | **Politiet** | Operative meldinger fra Politiloggen | Filtrer på distrikt, kommune, kategori, status og periode. Lag Power Query-kode eller R-skript som henter alle tilgjengelige sider. |
 
 Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
-i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et. Verktøyet
+i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et og NVDB API Les V4 for vegobjekter. Verktøyet
 omfatter ikke alle datatjenestene fra Udir eller Statens vegvesen.
 
 ## Kom i gang med Power BI
@@ -115,6 +115,39 @@ med håndtering av sommer- og vintertid. Time- og døgndata hentes med alle
 sidepekere, månedsdata hentes for hvert valgt år, og ÅDT filtreres til
 ønsket årsintervall. Uttrekket gjelder totalen ved hver stasjon.
 
+### Vegvesenet · NVDB
+
+Åpne **Vegvesenet · Veg og trafikk → NVDB · Vegobjekter**. Søk etter navn,
+beskrivelse eller vegobjekttype-ID, for eksempel **Fartsgrense (105)**,
+**Bru (60)** eller **Tunnel (581)**. Oversikten omfatter åpne vegobjekttyper.
+
+Velg fylke, kommune og eventuelt vegkategori og vegnummer. Eksempel:
+**Fartsgrense → Troms → Tromsø → Europaveg → 8** henter objekter langs E8
+i Tromsø. Uten geografisk filter hentes hele landet. Uttrekket viser gjeldende
+registrerte objekter; dette er ikke en tidsserie over trafikkmålinger.
+
+**Hent forhåndsvisning** viser opptil 20 objekter fra første API-side.
+Power Query- og R-koden henter alle sider og gir én rad per vegobjekt.
+Velg **Anonym** i Power BI. R-skriptet forutsetter at `httr2` og `jsonlite`
+er installert, og legger resultatet i `data`.
+
+Objekt-ID, type, versjon, datoer, fylkes- og kommunenummer, vegreferanser og
+eventuell lengde følger med. Egenskaper får egne kolonner med navn som
+`E2021_Fartsgrense`. ID-prefikset hindrer kollisjoner mellom egenskaper med
+samme navn. Sammensatte egenskaper beholdes som JSON-tekst. Et objekt som
+berører flere vegreferanser eller kommuner beholder disse samlet i samme rad.
+Manglende verdier erstattes ikke med 0.
+
+Valget **Ta med geometri** legger til `Geometri_WKT` og `Geometri_SRID`.
+Koordinatsystemet oppgis i SRID-feltet; WKT-koordinatene er ikke nødvendigvis
+lengde- og breddegrader.
+
+Oversikten over typer og områder ligger i `data/vegvesen/nvdb.json`.
+Oppdater med `python scripts/update_nvdb_metadata.py` og ta med JSON-filen
+når du selv committer og pusher. Datauttrekk og forhåndsvisning hentes direkte
+fra NVDB med den påkrevde `X-Client`-headeren. Se
+[NVDB-dokumentasjonen](https://nvdb-docs.atlas.vegvesen.no/category/nvdb-api-les-v4/).
+
 ### Politiet · Politiloggen
 
 Velg distrikt, kommune, kategori, status og dynamisk eller fast periode i den
@@ -139,7 +172,7 @@ egen backend å starte eller drifte for denne løsningen.
 | FHI | Hentes fra FHI, med lokale navne- og geografifiler | På nettsiden og i Power BI |
 | SSB | Hentes fra SSB og mellomlagres i nettleseren i opptil seks timer. Kan oppdateres manuelt. | På nettsiden og i Power BI |
 | Udir | Lagrede metadata i prosjektet, oppdatert med et Python-skript | I Power BI |
-| Vegvesenet | Lagret stasjonsoversikt i prosjektet, oppdatert med et Python-skript | I Power BI |
+| Vegvesenet | Lagrede oversikter over stasjoner, NVDB-typer og områder, oppdatert med Python-skript | NVDB på nettsiden; begge tjenester i Power BI eller R |
 | Politiet | Lagret oversikt over distrikter, kommuner og kategorier, oppdatert med et Python-skript | I Power BI eller R |
 
 Selve datauttrekket i Power Query hentes direkte fra den valgte datakilden.
@@ -185,11 +218,12 @@ Appen må serveres over HTTP; ikke åpne `index.html` direkte som en lokal fil.
 ## Oppdatere metadata
 
 Kjør disse kommandoene fra prosjektmappen når Udir får nye skoleår eller
-filtre, eller når Vegvesenets stasjonsoversikt skal oppdateres:
+filtre, eller når Vegvesenets stasjons- eller NVDB-oversikt skal oppdateres:
 
 ```powershell
 python scripts/update_udir_metadata.py
 python scripts/update_vegvesen_metadata.py
+python scripts/update_nvdb_metadata.py
 python scripts/update_politiet_metadata.py
 ```
 

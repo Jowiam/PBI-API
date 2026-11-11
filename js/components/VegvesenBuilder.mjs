@@ -1,6 +1,7 @@
 import { TRAFFIC_API, TRAFFIC_MODES, addDays, validateTrafficOptions, trafficRequest, trafficPowerQuery, readTrafficStations } from '../lib/vegvesen.mjs';
 import { normalizeSearch } from '../lib/searchSynonyms.mjs';
 import { trafficRCode, downloadRScript } from '../lib/rCode.mjs';
+import { NVDBBuilder } from './NVDBBuilder.mjs';
 
 const { createElement: h, useState, useEffect, useMemo, useRef } = React;
 const button = (label, onClick, disabled = false, primary = false) => h('button', { type: 'button', className: 'btn ' + (primary ? 'btn-primary' : 'btn-outline'), onClick, disabled }, label);
@@ -8,6 +9,18 @@ const date = value => value ? new Date(value).toLocaleDateString('nb-NO', { time
 const today = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Oslo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
 export function VegvesenBuilder() {
+    const [service, setService] = useState('traffic');
+    const [nvdbOpened, setNvdbOpened] = useState(false);
+    return h(React.Fragment, null,
+        h('div', { className: 'container vegvesen-services' },
+            h('nav', { className: 'ssb-output-tabs', 'aria-label': 'Datatjeneste fra Vegvesenet' },
+                h('button', { type: 'button', className: service === 'traffic' ? 'active' : '', 'aria-pressed': service === 'traffic', onClick: () => setService('traffic') }, 'Trafikkdata · Målestasjoner'),
+                h('button', { type: 'button', className: service === 'nvdb' ? 'active' : '', 'aria-pressed': service === 'nvdb', onClick: () => { setNvdbOpened(true); setService('nvdb'); } }, 'NVDB · Vegobjekter'))),
+        h('div', { hidden: service !== 'traffic' }, h(TrafficBuilder)),
+        nvdbOpened && h('div', { hidden: service !== 'nvdb' }, h(NVDBBuilder)));
+}
+
+function TrafficBuilder() {
     const [catalog, setCatalog] = useState(null);
     const [search, setSearch] = useState('');
     const [county, setCounty] = useState('');

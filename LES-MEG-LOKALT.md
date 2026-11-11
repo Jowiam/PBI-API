@@ -21,7 +21,7 @@ Ingen ekstra Python-pakker er nødvendige.
 ## Bruk
 
 Velg **FHI · Folkehelse**, **SSB · Statistikkbanken**, **Udir · Utdanning**
-eller **Vegvesenet · Trafikkdata** i toppmenyen.
+eller **Vegvesenet · Veg og trafikk** i toppmenyen.
 Utvalget i hver del beholdes når du bytter mellom dem.
 
 ### Hent data til R – alle fire kilder
@@ -158,7 +158,7 @@ av Udir når spørringen kjøres; filtre kan variere mellom skoleår og skoler.
 
 ### Vegvesenet – trafikkdata til Power BI
 
-1. Velg **Vegvesenet · Trafikkdata**. Søk etter målestasjon, ID, vegnummer,
+1. Velg **Vegvesenet · Veg og trafikk → Trafikkdata · Målestasjoner**. Søk etter målestasjon, ID, vegnummer,
    kommune eller fylke. Søk på `E6` finner også vegreferanser skrevet `EV6`.
 2. Avgrens eventuelt til fylke, motorkjøretøy/sykkel og stasjoner i drift.
    Kommunelisten følger valgt fylke. **Velg alle treff** velger hele
@@ -211,6 +211,33 @@ python scripts/update_vegvesen_metadata.py
 Du committer og pusher selv hele `data/vegvesen/` sammen med kodeendringene.
 Dataene distribueres av Statens vegvesen under NLOD. Se
 [API-dokumentasjonen](https://trafikkdata.atlas.vegvesen.no/om-api).
+
+### Vegvesenet – NVDB
+
+1. Velg **Vegvesenet · Veg og trafikk → NVDB · Vegobjekter**.
+2. Søk etter type, for eksempel fartsgrense, bru, tunnel eller type-ID 105.
+3. Velg fylke, kommune og eventuelt vegkategori og vegnummer. For E8 i Tromsø:
+   velg **Troms → Tromsø → Europaveg → 8**.
+4. Bruk **Hent forhåndsvisning** for å se opptil 20 objekter fra første side.
+5. Velg **Lag Power Query-kode →** eller **Lag R-kode →**. Kopier koden eller
+   last ned `.pq`/`.R`. Koden henter alle sider, med én rad per vegobjekt.
+
+Power BI bruker **Anonym** tilkobling. R forutsetter `httr2` og `jsonlite`
+og legger resultatet i `data`. Egenskaper får kolonner som
+`E2021_Fartsgrense`. Sammensatte egenskaper beholdes som JSON-tekst, og
+fylkes-/kommunenumre beholdes som tekst med innledende nuller.
+Valgfri geometri leveres som WKT med tilhørende SRID, ikke nødvendigvis
+lengde- og breddegrader. Utvalget gjelder gjeldende registrerte vegobjekter.
+
+Type- og områdeoversikten er lagret i `data/vegvesen/nvdb.json`.
+Oppdater den med:
+
+```powershell
+python scripts/update_nvdb_metadata.py
+```
+
+Ta med JSON-filen ved egen commit/push. Selve dataene hentes direkte fra
+NVDB API Les V4 når du kjører spørringen eller henter forhåndsvisning.
 
 ### Prosjektfiler
 

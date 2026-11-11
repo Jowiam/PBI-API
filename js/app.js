@@ -368,7 +368,7 @@ function StatisticsApp() {
                 h('button', { type: 'button', 'aria-pressed': provider === 'fhi', onClick: () => setProvider('fhi') }, 'FHI · Folkehelse'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'ssb', onClick: () => { setSSBOpened(true); setProvider('ssb'); } }, 'SSB · Statistikkbanken'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'udir', onClick: () => { setUdirOpened(true); setProvider('udir'); } }, 'Udir · Utdanning'),
-                h('button', { type: 'button', 'aria-pressed': provider === 'vegvesen', onClick: () => { setVegvesenOpened(true); setProvider('vegvesen'); } }, 'Vegvesenet · Trafikkdata'),
+                h('button', { type: 'button', 'aria-pressed': provider === 'vegvesen', onClick: () => { setVegvesenOpened(true); setProvider('vegvesen'); } }, 'Vegvesenet · Veg og trafikk'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'politiet', onClick: () => { setPolitietOpened(true); setProvider('politiet'); } }, 'Politiet · Politiloggen')
             )
         ),
