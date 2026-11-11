@@ -153,6 +153,10 @@
 .vegvesen-services { --ssb-accent: #795013; max-width: 82rem; padding-top: 1rem; }
 .nvdb-app { --ssb-accent: #795013; }
 .nvdb-types { max-height: 34rem; overflow: auto; }
+.nvdb-types .ssb-table-result { grid-template-columns: minmax(0, 1fr) auto; align-items: start; padding: 1rem .5rem; }
+.nvdb-types .ssb-table-result > span:first-child { min-width: 0; }
+.nvdb-types .ssb-table-meta { max-width: 85ch; line-height: 1.55; white-space: normal; word-break: normal; overflow-wrap: break-word; }
+.nvdb-types .ssb-table-id { grid-column: auto; white-space: nowrap; }
 .nvdb-preview { overflow: auto; max-height: 26rem; margin-top: 1rem; border: 1px solid var(--color-border-subtle); }
 .nvdb-preview table { border-collapse: collapse; font-size: .8rem; }
 .nvdb-preview th, .nvdb-preview td { padding: .5rem; border-bottom: 1px solid var(--color-border-subtle); text-align: left; min-width: 7rem; max-width: 24rem; overflow-wrap: anywhere; }
