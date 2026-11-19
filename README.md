@@ -18,7 +18,7 @@ skrive API-kallene selv.
 | **Udir** | Elevundersøkelsen: indikatorer, tema, mobbing og deltakelse for grunnskole og videregående | Velg tabell og filtre som skoleår, enhet og trinn. Lag Power Query-kode som henter alle sidene og kontrollerer radantallet. |
 | **Statens vegvesen** | Trafikkdata fra målestasjoner og åpne vegobjekter fra NVDB API Les V4 | Velg **Trafikkdata** eller **NVDB** under Vegvesenet. Søk etter stasjoner eller vegobjekttyper, filtrer utvalget og lag Power Query-kode eller R-skript. NVDB støtter forhåndsvisning og filtre på fylke, kommune og veg. |
 | **Politiet** | Operative meldinger fra Politiloggen | Filtrer på distrikt, kommune, kategori, status og periode. Lag Power Query-kode eller R-skript som henter alle tilgjengelige sider. |
-| **Brønnøysundregistrene** | Virksomheter, arbeidssteder, regnskap, roller, fullmakter, konsern, frivillighet, endringslogger, kodeverk og rapporteringsplikter | Søk blant temaer og lag **R-skript**. Filtrer virksomheter eller oppgi organisasjonsnumre for oppslag. Hele registerbestander har egne nedlastingsvalg. Foreløpig ingen Power Query-eksport for denne kilden. |
+| **Brønnøysundregistrene** | 79 temaer og nedlastingsvalg: virksomheter, arbeidssteder, regnskap, roller, fullmakter, konsern, frivillighet, offentlig støtte, partier, statlig struktur, kompensasjonsordninger, endringslogger, kodeverk og rapporteringsplikter | Søk blant temaer og lag **R-skript**. Filtrer virksomheter og støtte, eller oppgi organisasjonsnumre for oppslag. Hele registerbestander har egne nedlastingsvalg. CSV, Excel, komprimert JSON og regnskapskopier i PDF støttes der tjenesten tilbyr det. Foreløpig ingen Power Query-eksport for denne kilden. |
 
 Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
 i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et og NVDB API Les V4 for vegobjekter. Verktøyet
@@ -65,6 +65,11 @@ søkevindu på 10 000 treff: avgrens søket eller velg hele registerbestanden.
 CSV-bestandene lastes ned og leses som tekst til `data`. Den store rollebestanden
 lastes bare ned som komprimert JSON-fil; `data` inneholder filbanen.
 JSON-oppslag flater ut objekter til kolonner og beholder lister som JSON i cellene.
+Støtteregisteret støtter søk på blant annet støttegiver, mottaker, region, næring
+og tildelingsdato. Søkevinduet er 100 000 treff; skriptet stopper med beskjed ved
+grensen slik at et deluttrekk ikke blir presentert som komplett.
+Excel-valgene krever i tillegg `readxl`, og leser alle ark som tekst til én tabell
+med kolonnen `kilde_ark`. PDF-valgene lagrer dokumenter og gir filbaner i `data`.
 Åpne regnskapstall dekker de siste tre regnskapsårene. Beskyttede tjenester og
 betalings-API-er er ikke inkludert. Se [Brønnøysund-integrasjonen](./data/brreg/README.md).
 

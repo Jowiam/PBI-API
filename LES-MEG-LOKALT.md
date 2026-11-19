@@ -289,5 +289,9 @@ Resultatet ligger i `data`. Denne kilden har foreløpig bare R-eksport.
 Velg **Hele registerbestander** for komplette nedlastinger som kan være større
 enn søkegrensen på 10 000 virksomheter. Store filer krever tid, diskplass og minne.
 Rollebestanden lastes ned som fil uten å leses inn i minnet.
+Brønnøysund-delen omfatter også Støtteregisteret, politiske partier, struktur i
+statlig sektor og historiske kompensasjonsordninger. Støttesøk har egen grense
+på 100 000 treff. Excel-valgene krever pakken `readxl`; alle ark samles i `data`.
+PDF-valgene laster ned dokumenter og gir filbaner i `data`.
 Se [detaljer og begrensninger](./data/brreg/README.md).
 

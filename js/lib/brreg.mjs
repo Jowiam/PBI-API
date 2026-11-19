@@ -1,3 +1,4 @@
+import { brregExtraTopics, stotteSearchBody } from './brregExtra.mjs';
 export const BRREG_API = 'https://data.brreg.no';
 const enhets = '/enhetsregisteret/api';
 const frivillig = '/frivillighetsregisteret/api';
@@ -33,7 +34,8 @@ export const BRREG_TOPICS = [
     ...[['rapporteringsplikter', 'Kommunale rapporteringsplikter'], ['rapporteringsomraader', 'Kommunale rapporteringsområder'], ['virksomheter', 'Ansvarlige etater – kommunal rapportering']].map(([path, title]) => topic('kor-' + path, 'Kommunal rapportering', title, 'Åpne opplysninger fra Kommunalt rapporteringsregister.', '/kommunalt-rapporteringsregister/api/' + path, { collection: path })),
     topic('oppgaver', 'Offentlige skjema og plikter', 'Alle offentlige skjema i Oppgaveregisteret', 'Skjema og rapporteringsplikter registrert i Oppgaveregisteret. Hele listen hentes i ett kall.', '/oppgaveregisteret/api/skjema/alle.json', { array: true }),
     ...[['organisasjonsform', 'Oppgaveregisterets organisasjonsformer'], ['naeringskode', 'Oppgaveregisterets næringskoder'], ['skjemaeiere', 'Skjemaeiere og etater']].map(([path, title]) => topic('oppgave-' + path, 'Offentlige skjema og plikter', title, path === 'naeringskode' ? 'Registerets egne næringskoder, som ikke nødvendigvis følger siste versjon av SSBs næringsstandard.' : 'Opplysninger og beskrivelser fra Oppgaveregisteret.', '/oppgaveregisteret/api/' + path + '.json', { array: true })),
-    ...[['bruksomraade', 'Bruksområder'], ['skjemaformaal', 'Skjemaformål'], ['vedleggskrav', 'Vedleggskrav'], ['eoesTilpasset', 'EØS-tilpasning'], ['rapporteringsform', 'Rapporteringsformer']].map(([path, title]) => topic('oppgave-' + path, 'Offentlige skjema og plikter', title, 'Kodeverk for skjema i Oppgaveregisteret.', '/oppgaveregisteret/api/parameter/' + path + '.json', { array: true }))
+    ...[['bruksomraade', 'Bruksområder'], ['skjemaformaal', 'Skjemaformål'], ['vedleggskrav', 'Vedleggskrav'], ['eoesTilpasset', 'EØS-tilpasning'], ['rapporteringsform', 'Rapporteringsformer']].map(([path, title]) => topic('oppgave-' + path, 'Offentlige skjema og plikter', title, 'Kodeverk for skjema i Oppgaveregisteret.', '/oppgaveregisteret/api/parameter/' + path + '.json', { array: true })),
+    ...brregExtraTopics(topic)
 ];
 
 export function brregTopic(id) {
@@ -59,7 +61,7 @@ export function validateBrregOptions(id, options = {}, metadata) {
     const item = brregTopic(id);
     const orgs = [...new Set(String(options.org || '').split(/[\s,;]+/).filter(Boolean))];
     if (item.org && (!orgs.length || orgs.some(org => !/^\d{9}$/.test(org)))) throw new Error('Oppgi ett eller flere organisasjonsnummer med ni siffer.');
-    const parameters = {};
+    const parameters = { ...item.defaults };
     const allowed = new Set([...(item.fields || []).map(([key]) => key), ...(metadata?.filters?.[item.filters] || []).map(field => field.name)]);
     for (const [key, raw] of Object.entries(options.parameters || {})) {
         const value = String(raw).trim();
@@ -76,6 +78,14 @@ export function validateBrregOptions(id, options = {}, metadata) {
     if (parameters['år'] && !/^\d{4}$/.test(parameters['år'])) throw new Error('Regnskapsår må ha fire siffer.');
     if (parameters.regnskapstype && !['SELSKAP', 'KONSERN'].includes(parameters.regnskapstype)) throw new Error('Velg SELSKAP eller KONSERN.');
     if (parameters.organisasjonsnummer && parameters.organisasjonsnummer.split(',').some(value => !/^\d{9}$/.test(value.trim()))) throw new Error('Organisasjonsnummer må ha ni siffer, adskilt med komma.');
+    for (const key of item.required || []) if (!parameters[key]) throw new Error('Fyll ut ' + item.fields.find(([name]) => name === key)[1] + '.');
+    if (item.requireAny && !item.requireAny.some(key => parameters[key])) throw new Error('Oppgi matrikkel-ID eller matrikkelnummer.');
+    for (const [key, values] of Object.entries(item.choices || {})) if (!values.includes(parameters[key])) throw new Error('Velg en gyldig verdi for ' + key + '.');
+    if (parameters.aar && !/^\d{4}$/.test(parameters.aar)) throw new Error('Regnskapsår må ha fire siffer.');
+    if (parameters.id && !/^[a-zA-Z0-9_-]+$/.test(parameters.id)) throw new Error('Oppgi en gyldig dokument-/regnskaps-ID.');
+    for (const key of ['STOETTEMOTTAKER_ORGNR', 'STOETTEGIVER_ORGNR']) if (parameters[key] && !/^\d{9}$/.test(parameters[key])) throw new Error('Organisasjonsnummer må ha ni siffer.');
+    for (const key of ['fraTildelingsdato', 'tilTildelingsdato']) if (parameters[key] && (!/^\d{4}-\d{2}-\d{2}$/.test(parameters[key]) || !Number.isFinite(new Date(parameters[key]).getTime()) || new Date(parameters[key]).toISOString().slice(0, 10) !== parameters[key])) throw new Error('Velg en gyldig tildelingsdato.');
+    if (parameters.fraTildelingsdato && parameters.tilTildelingsdato && parameters.fraTildelingsdato > parameters.tilTildelingsdato) throw new Error('Til-dato må være etter fra-dato.');
     return { item, orgs, parameters };
 }
 
@@ -106,20 +116,54 @@ rownames(data) <- NULL`;
 export function brregRCode(id, options = {}, metadata) {
     const { item, orgs, parameters } = validateBrregOptions(id, options, metadata);
     const lines = ['# Brønnøysundregistrene: ' + item.title, 'library(httr2)'];
+    const base = item.base || BRREG_API;
+    const resolvedPath = item.path.replace(/\{([^}]+)\}/g, (token, key) => key === 'org' ? token : encodeURIComponent(parameters[key]));
+    const urlExpression = item.org ? 'paste0(' + quote(base + resolvedPath.split('{org}')[0]) + ', org, ' + quote(resolvedPath.split('{org}')[1]) + ')' : brregRString(base + resolvedPath);
     if (item.file) {
-        const filename = id + (item.file === 'csv' ? '.csv' : '.json') + (item.gzip ? '.gz' : '');
-        lines.push('', 'url <- ' + brregRString(BRREG_API + item.path), 'fil <- ' + quote(filename), 'request(url) |> req_headers(Accept = "*/*") |> req_perform(path = fil)');
-        if (item.file === 'download') lines.push('data <- data.frame(fil = normalizePath(fil), format = "JSON gzip")');
-        else lines.push('data <- read.csv(' + (item.gzip ? 'gzfile(fil)' : 'fil') + ', sep = ",",', '  colClasses = "character", check.names = FALSE, encoding = "UTF-8", na.strings = "")');
+        const filename = id + (parameters.aar ? '-' + parameters.aar : '') + (parameters.id ? '-' + parameters.id : '');
+        const suffix = '.' + (item.file === 'download' ? 'json' : item.file) + (item.gzip ? '.gz' : '');
+        if (item.file === 'xlsx') lines.push('library(readxl)');
+        if (item.org) lines.push('', 'tables <- list()', 'for (org in c(\n  ' + orgs.map(quote).join(',\n  ') + '\n)) {');
+        const indent = item.org ? '  ' : '';
+        const add = text => lines.push(...text.split('\n').map(line => indent + line));
+        add('\nurl <- ' + urlExpression);
+        add('fil <- ' + (item.org ? 'paste0(' + quote(filename + '-') + ', org, ' + quote(suffix) + ')' : quote(filename + suffix)));
+        const query = Object.entries(parameters).filter(([key, value]) => value && !item.path.includes('{' + key + '}'));
+        if (query.length) {
+            add('parameters <- list(\n  ' + query.map(([key, value]) => quote(key) + ' = ' + brregRString(value)).join(',\n  ') + '\n)');
+            add('do.call(req_url_query, c(list(request(url)), parameters)) |>\n  req_headers(Accept = "*/*") |> req_perform(path = fil)');
+        } else add('request(url) |> req_headers(Accept = "*/*") |> req_perform(path = fil)');
+        if (['download', 'pdf'].includes(item.file)) add('data <- data.frame(fil = normalizePath(fil), format = ' + quote(item.file === 'pdf' ? 'PDF' : 'JSON gzip') + ')');
+        else if (item.file === 'xlsx') add('data <- do.call(rbind, lapply(excel_sheets(fil), function(ark) {\n  table <- as.data.frame(read_excel(fil, sheet = ark, col_types = "text", trim_ws = FALSE, .name_repair = "minimal"), check.names = FALSE)\n  table$kilde_ark <- ark\n  table\n}))\nrownames(data) <- NULL');
+        else {
+            if (item.bom) add('con <- file(fil, open = "rt")\ninvisible(seek(con, where = 3L, origin = "start")) # UTF-8 BOM');
+            add('data <- read.csv(' + (item.gzip ? 'gzfile(fil)' : item.bom ? 'con' : 'fil') + ', sep = ' + quote(item.separator || ',') + ',' + (item.columns ? '\n  header = FALSE, col.names = c(\n    ' + item.columns.map(quote).join(',\n    ') + '\n  ),' : '') + '\n  colClasses = "character", check.names = FALSE, encoding = "UTF-8", na.strings = "")');
+            if (item.bom) add('close(con)');
+        }
+        if (item.org) lines.push('  data$spurt_organisasjonsnummer <- rep(org, nrow(data))', '  tables <- c(tables, list(data))', '}', 'data <- do.call(rbind, tables)', 'rownames(data) <- NULL');
         return lines.join('\n') + '\n';
+    }
+    if (item.stotteSearch) {
+        const body = stotteSearchBody(parameters);
+        lines.push('library(jsonlite)', '', 'url <- ' + urlExpression, 'filters <- list(' + (body.length ? '\n  ' + body.map(filter => 'list(field = ' + quote(filter.field) + ', value = ' + (Array.isArray(filter.value) ? 'list(\n    ' + filter.value.map(brregRString).join(',\n    ') + '\n  )' : brregRString(filter.value)) + ', matchType = ' + quote(filter.matchType) + ')').join(',\n  ') + '\n' : '') + ')',
+            'records <- list()', 'page <- 1L', 'repeat {',
+            '  response <- request(url) |>',
+            '    req_url_query(pageSize = 1000L, page = page, sortBy = "STOETTETILTAKSNUMMER", sortDirection = "ASC") |>',
+            '    req_body_json(filters, auto_unbox = TRUE) |>',
+            '    req_perform() |> resp_body_json(simplifyVector = FALSE)',
+            '  batch <- response[[' + quote(item.stotteSearch) + ']]',
+            '  records <- c(records, batch)', '  if (length(batch) < 1000L) break',
+            '  if (page >= 100L) stop("Søkevinduet på 100 000 treff er nådd. Avgrens søket for et komplett uttrekk.")',
+            '  page <- page + 1L', '}', '', flattenCode, '');
+        return lines.join('\n');
     }
     lines.push('library(jsonlite)', '', 'records <- list()');
     if (item.org) lines.push('organisasjonsnumre <- c(\n  ' + orgs.map(quote).join(',\n  ') + '\n)', 'for (org in organisasjonsnumre) {');
     const indent = item.org ? '  ' : '';
     const add = code => lines.push(...code.split('\n').map(line => indent + line));
-    const path = item.org ? 'paste0(' + quote(BRREG_API + item.path.split('{org}')[0]) + ', org, ' + quote(item.path.split('{org}')[1]) + ')' : brregRString(BRREG_API + item.path);
-    add('url <- ' + path);
+    add('url <- ' + urlExpression);
     const params = { ...parameters };
+    for (const key of Object.keys(params)) if (item.path.includes('{' + key + '}')) delete params[key];
     if (item.collection) params.size = '1000';
     if (item.events) params.size = '1000';
     add('parameters <- list(' + (Object.keys(params).length ? '\n  ' + Object.entries(params).map(([key, value]) => quote(key) + ' = ' + brregRString(value)).join(',\n  ') + '\n' : '') + ')');
@@ -130,6 +174,8 @@ export function brregRCode(id, options = {}, metadata) {
         add('  for (group in response$rollegrupper) {\n    for (role in group$roller) {\n      role$rollegruppe <- group$type\n      role$spurt_organisasjonsnummer <- org\n      records <- c(records, list(role))\n    }\n  }');
     } else if (item.transform === 'tree') {
         add('  collect_nodes <- function(node) {\n    children <- node$children\n    node$children <- NULL\n    node$spurt_organisasjonsnummer <- org\n    c(list(node), unlist(lapply(children, collect_nodes), recursive = FALSE))\n  }\n  records <- c(records, collect_nodes(response))');
+    } else if (item.transform === 'map') {
+        add('  batch <- lapply(names(response), function(key) {\n    row <- response[[key]]\n    row$identifikator <- key\n    row\n  })\n  records <- c(records, batch)');
     } else {
         add('  batch <- ' + (item.collection ? (item.directCollection ? 'response[[' : 'response[["_embedded"]][[') + quote(item.collection) + ']]' : item.array ? 'response' : 'list(response)'));
         if (item.org) add('  batch <- lapply(batch, function(row) {\n    if (!is.list(row)) row <- list(verdi = row)\n    row$spurt_organisasjonsnummer <- org\n    row\n  })');
