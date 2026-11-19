@@ -216,3 +216,13 @@
     .ssb-topic-navigation.expanded { display: block; padding-top: 1rem; }
     .ssb-subtopics { grid-template-columns: 1fr; }
 }
+.brreg-topics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
+.brreg-topic { display: flex; flex-direction: column; gap: .55rem; padding: 1rem; text-align: left; background: white; border: 1px solid #cbd5e1; border-radius: .65rem; cursor: pointer; color: inherit; font: inherit; overflow-wrap: anywhere; }
+.brreg-topic:hover, .brreg-topic:focus-visible { border-color: #2563eb; background: #eff6ff; }
+.brreg-topic small { color: #475569; }
+.brreg-topic span { line-height: 1.5; }
+.brreg-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1rem; margin: 1rem 0; }
+.brreg-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; margin: .6rem 0; }
+.brreg-field small { line-height: 1.45; }
+.brreg-app summary { cursor: pointer; margin: 1rem 0; font-weight: 600; }
+.brreg-app h2 { margin-top: 1rem; }

@@ -1,9 +1,10 @@
-# FHI, SSB, Udir og Vegvesenet – spørringer til Power BI og R
+# Offentlige data – spørringer til Power BI og R
 
 Dette prosjektet tar utgangspunkt i https://github.com/janhli/FHI-API-Query-Builder,
 lastet ned fra `main` 2. november 2026. Originalens kode, dokumentasjon og
 MIT-lisens er beholdt. Se `README.md` og `LICENSE`.
-Den lokale løsningen har i tillegg egne deler for SSB, Udir og Statens vegvesen.
+Den lokale løsningen har i tillegg egne deler for SSB, Udir, Statens vegvesen,
+Politiet og Brønnøysundregistrene.
 
 ## Start
 
@@ -20,11 +21,10 @@ Ingen ekstra Python-pakker er nødvendige.
 
 ## Bruk
 
-Velg **FHI · Folkehelse**, **SSB · Statistikkbanken**, **Udir · Utdanning**
-eller **Vegvesenet · Veg og trafikk** i toppmenyen.
+Velg FHI, SSB, Udir, Vegvesenet, Politiet eller Brønnøysund i toppmenyen.
 Utvalget i hver del beholdes når du bytter mellom dem.
 
-### Hent data til R – alle fire kilder
+### Hent data til R – alle seks kilder
 
 Velg tabell eller målestasjoner og ønskede filtre. Bruk **Lag R-kode →**
 eller velg **R-skript** i resultatvisningen.
@@ -279,3 +279,15 @@ Testene kjøres med `node --test` fra prosjektmappen (Node.js 20 eller nyere).
 En portabel Node.js ligger lokalt under `.tools/node-v22.14.0-win-x64/` og
 kan brukes med `.\.tools\node-v22.14.0-win-x64\node.exe --test`.
 Node.js er ikke nødvendig for å bruke appen.
+## Brønnøysundregistrene til R
+
+Velg **Brønnøysund · Registerdata** i toppmenyen. Søk etter tema, velg filtre
+eller organisasjonsnumre og trykk **Lag R-kode**. Kopier koden eller last ned
+R-skriptet og kjør det i R/RStudio med `httr2` og `jsonlite` installert.
+Resultatet ligger i `data`. Denne kilden har foreløpig bare R-eksport.
+
+Velg **Hele registerbestander** for komplette nedlastinger som kan være større
+enn søkegrensen på 10 000 virksomheter. Store filer krever tid, diskplass og minne.
+Rollebestanden lastes ned som fil uten å leses inn i minnet.
+Se [detaljer og begrensninger](./data/brreg/README.md).
+

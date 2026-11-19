@@ -18,6 +18,7 @@ skrive API-kallene selv.
 | **Udir** | Elevundersøkelsen: indikatorer, tema, mobbing og deltakelse for grunnskole og videregående | Velg tabell og filtre som skoleår, enhet og trinn. Lag Power Query-kode som henter alle sidene og kontrollerer radantallet. |
 | **Statens vegvesen** | Trafikkdata fra målestasjoner og åpne vegobjekter fra NVDB API Les V4 | Velg **Trafikkdata** eller **NVDB** under Vegvesenet. Søk etter stasjoner eller vegobjekttyper, filtrer utvalget og lag Power Query-kode eller R-skript. NVDB støtter forhåndsvisning og filtre på fylke, kommune og veg. |
 | **Politiet** | Operative meldinger fra Politiloggen | Filtrer på distrikt, kommune, kategori, status og periode. Lag Power Query-kode eller R-skript som henter alle tilgjengelige sider. |
+| **Brønnøysundregistrene** | Virksomheter, arbeidssteder, regnskap, roller, fullmakter, konsern, frivillighet, endringslogger, kodeverk og rapporteringsplikter | Søk blant temaer og lag **R-skript**. Filtrer virksomheter eller oppgi organisasjonsnumre for oppslag. Hele registerbestander har egne nedlastingsvalg. Foreløpig ingen Power Query-eksport for denne kilden. |
 
 Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
 i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et og NVDB API Les V4 for vegobjekter. Verktøyet
@@ -41,7 +42,7 @@ Udir, Vegvesenet og Politiet har en knapp for å laste ned M-koden som en `.pq`-
 
 ## Hent data til R
 
-Alle fem datakildene kan generere et komplett R-skript med det samme utvalget
+Alle seks datakildene kan generere et komplett R-skript med det samme utvalget
 som du har valgt på nettsiden.
 
 1. Velg tabell eller stasjoner og tilpass filtrene.
@@ -57,6 +58,15 @@ install.packages(c("httr2", "jsonlite"))
 Resultatet ligger i en **data.frame kalt `data`**. Skriptet henter data direkte
 fra API-et når du kjører det. R trengs bare på maskinen som kjører skriptet;
 nettsiden fungerer fortsatt på GitHub Pages.
+
+Under **Brønnøysund · Registerdata** velger du et tema og deretter **Lag R-kode**.
+Skriptet følger sideinndelingen automatisk. Virksomhetssøk begrenses av API-ets
+søkevindu på 10 000 treff: avgrens søket eller velg hele registerbestanden.
+CSV-bestandene lastes ned og leses som tekst til `data`. Den store rollebestanden
+lastes bare ned som komprimert JSON-fil; `data` inneholder filbanen.
+JSON-oppslag flater ut objekter til kolonner og beholder lister som JSON i cellene.
+Åpne regnskapstall dekker de siste tre regnskapsårene. Beskyttede tjenester og
+betalings-API-er er ikke inkludert. Se [Brønnøysund-integrasjonen](./data/brreg/README.md).
 
 Udir henter alle sider og kontrollerer radantallet. Vegvesenet henter alle
 valgte stasjoner og sider/år. SSB gir et enkelt skript som bruker `httr2`
