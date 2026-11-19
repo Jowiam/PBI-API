@@ -286,6 +286,13 @@ eller organisasjonsnumre og trykk **Lag R-kode**. Kopier koden eller last ned
 R-skriptet og kjør det i R/RStudio med `httr2` og `jsonlite` installert.
 Resultatet ligger i `data`. Denne kilden har foreløpig bare R-eksport.
 
+Ved organisasjonsnummerfeltet kan du bruke **Finn virksomhet og fyll inn nummer**.
+Søk etter navn eller nummer, og velg riktig hovedenhet eller arbeidssted. Flere
+virksomheter kan legges til. **Finn kode** søker i navn og koder for blant annet
+kommune, organisasjonsform, næring og offentlig støtte. Valgene fyller ut filtrene.
+Ved regnskap og PDF-kopier viser årsvelgeren felles dokumentår for de valgte
+virksomhetene. Tallspørringer får en kortere årsliste. Du kan også skrive manuelt.
+
 Velg **Hele registerbestander** for komplette nedlastinger som kan være større
 enn søkegrensen på 10 000 virksomheter. Store filer krever tid, diskplass og minne.
 Rollebestanden lastes ned som fil uten å leses inn i minnet.

@@ -8,6 +8,11 @@ SSB-delens kompakte emneoppsett, frekvensfilter og søkeoppsett er inspirert av
 Synonymgruppene i `js/lib/searchSynonyms.mjs` er tilpasset fra prosjektets
 `js/synonyms.js`. Øvrig integrasjonskode er skrevet for denne applikasjonen.
 
+Brønnøysund-delens søkbare næringskoder er hentet fra
+[SSB Klass – Standard for næringsgruppering](https://www.ssb.no/klass/klassifikasjoner/6)
+og forkortet til koder og navn. Kilde: Statistisk sentralbyrå, lisens
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ## Statistikkportalen – MIT
 
 Copyright 2026 Hallvard Mørck

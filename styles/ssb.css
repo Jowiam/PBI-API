@@ -226,3 +226,12 @@
 .brreg-field small { line-height: 1.45; }
 .brreg-app summary { cursor: pointer; margin: 1rem 0; font-weight: 600; }
 .brreg-app h2 { margin-top: 1rem; }
+.brreg-assist { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: .6rem; padding: 1rem; margin: .75rem 0; min-width: 0; }
+.brreg-assist .ssb-actions { justify-content: space-between; align-items: center; }
+.brreg-company-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: .75rem; }
+.brreg-company-result { display: flex; flex-direction: column; gap: .45rem; padding: 1rem; background: white; border: 1px solid #cbd5e1; border-radius: .5rem; min-width: 0; overflow-wrap: anywhere; }
+.brreg-company-result button { margin-top: auto; }
+.brreg-code-values { max-height: 18rem; overflow-y: auto; margin: .5rem 0; }
+.brreg-code-values .ssb-value { display: flex; align-items: start; gap: .5rem; white-space: normal; overflow-wrap: anywhere; }
+.brreg-code-picker > button { width: 100%; text-align: left; white-space: normal; }
+.brreg-year-picker small { display: block; margin-top: .5rem; }

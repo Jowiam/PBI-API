@@ -60,6 +60,13 @@ fra API-et når du kjører det. R trengs bare på maskinen som kjører skriptet;
 nettsiden fungerer fortsatt på GitHub Pages.
 
 Under **Brønnøysund · Registerdata** velger du et tema og deretter **Lag R-kode**.
+Bruk **Finn virksomhet og fyll inn nummer** for å søke etter navn eller nummer,
+og legge én eller flere virksomheter direkte i utvalget. Søket kan avgrenses
+på kommune, organisasjonsform og hovedenhet/arbeidssted. **Finn kode** åpner
+søkbare lister over kommunenavn, organisasjonsformer, næringer og støttekoder.
+Ved regnskap og PDF-kopier kan du velge år fra registerets dokumentoversikt.
+Ved flere virksomheter vises felles år. For tallspørringer avgrenses årslisten
+til nyere regnskapsår; tall-API-et kan ha færre regnskap enn dokumentoversikten.
 Skriptet følger sideinndelingen automatisk. Virksomhetssøk begrenses av API-ets
 søkevindu på 10 000 treff: avgrens søket eller velg hele registerbestanden.
 CSV-bestandene lastes ned og leses som tekst til `data`. Den store rollebestanden

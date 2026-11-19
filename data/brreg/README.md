@@ -2,7 +2,8 @@
 
 Integrasjonen bruker åpne GET-endepunkter direkte på `https://data.brreg.no`.
 Den krever ingen API-nøkkel og støtter foreløpig bare generering av R-kode.
-Nettsiden lagrer bare søkemetadata; registerdata hentes når skriptet kjøres i R.
+Nettsiden lagrer bare søkemetadata og kodeverk. Hjelpesøk henter virksomheter og
+tilgjengelige dokumentår i nettleseren; selve uttrekket hentes når skriptet kjøres i R.
 Katalogen har 79 temaer og nedlastingsvalg. Flere valg gjelder samme register
 i ulike formater; dette er ikke 79 separate registre.
 
@@ -28,6 +29,26 @@ Temaområder:
   eller komprimert JSON og regnskaps-/mellombalansekopier som PDF.
 
 ## R-resultatet
+
+Før kodegenerering kan du bruke **Finn virksomhet og fyll inn nummer**. Søket
+viser navn, organisasjonsnummer, adresse, enhetstype og status. Flere virksomheter
+kan legges til uten duplikater. Tilsvarende søk finnes ved organisasjonsnummerfiltre,
+og samme utvalg beholdes når du bytter mellom temaer med organisasjonsnummerfelt.
+
+**Finn kode** lar deg søke på navn eller kode og fylle feltet med riktige verdier.
+Kommuner, organisasjonsformer og virksomhetsnæringer støtter flervalg. Støttekoder
+bruker riktig kardinalitet for hvert filter. Regioner bruker fylkesnummer (og UL
+for utland), ikke registerets interne ID. Næringer for virksomhetssøk kommer fra
+SSB Klass sin gjeldende standard; støttefiltrenes kodevalg har SN2007/SN2025.
+Manuell inntasting beholdes, også om hjelpeoppslag ikke kan lastes.
+
+Årsvelgeren henter dokumentoversiktene for inntil 20 valgte organisasjonsnumre,
+og viser bare felles år. For regnskapstall filtreres år eldre enn inneværende år
+minus tre bort; API-et kan likevel ha færre tall enn PDF-oversikten. Full eldre
+dokumenthistorikk vises ved PDF-valget. Bytter du organisasjonsutvalg, nullstilles
+det valgte året. Årstall kan fortsatt skrives manuelt. Regnskapstall-endepunktet
+selv tillater ikke nettleseroppslag fra GitHub Pages, så PDF-oversikten brukes
+som hjelp og presenteres ikke som en garanti for tilgjengelige numeriske poster.
 
 Pakkene `httr2` og `jsonlite` forutsettes installert. Skriptet henter data uten
 installasjonssjekker, ekstra feilhåndteringsfunksjoner eller automatiske retries.
@@ -90,11 +111,16 @@ Kjør fra prosjektmappen:
 
 ```powershell
 python scripts/update_brreg_metadata.py
+python scripts/update_brreg_codebooks.py
 ```
 
 Skriptet henter dagens OpenAPI fra Enhetsregisterets dokumentasjon og kommuneoversikten.
 Det lagrer søkefelt og kommuner i `metadata.json`, uten virksomhetsdata.
 Temakatalogen og kodegeneratoren ligger i `js/lib/brreg.mjs`.
+`codebooks.json` inneholder bare koder og navn. Oppdateringsskriptet henter
+organisasjonsformer fra Brønnøysund, kodeverk fra Støtteregisteret og gjeldende
+versjon av næringsstandarden fra SSB Klass. Lokale kodeoversikter gjør valgfeltene
+uavhengige av nettleserens CORS-tilgang til Støtteregisterets API.
 
 ## Kildedokumentasjon
 
@@ -108,3 +134,4 @@ Temakatalogen og kodegeneratoren ligger i `js/lib/brreg.mjs`.
 - [Registerfiler, Partiregisteret og statlig struktur](https://www.brreg.no/bruke-data-fra-bronnoysundregistrene/datasett-og-api/data-om-virksomheter/)
 - [Kompensasjon til næringslivet og tilbakebetalingskrav](https://data.brreg.no/kompensasjonsordning/innsyn/)
 - [Kompensasjon for innreisekarantene](https://data.brreg.no/kompensasjonsordning/innreise/innsyn/)
+- [SSB Klass – næringsgruppering](https://www.ssb.no/klass/klassifikasjoner/6) (CC BY 4.0; forkortet til koder og navn)
