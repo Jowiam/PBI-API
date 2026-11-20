@@ -1,4 +1,4 @@
-// Kildekartlegging, ikke tilkoblede API-er. Ingen person- eller virksomhetsdata lagres her.
+// Kildebeskrivelser for R-byggeren. Spørringer og tilgangsvalg ligger i registerR.mjs.
 export const REGISTER_REVIEWED = '2026-11-20';
 const roaring = id => 'https://developer.roaring.io/docs/apis/' + id;
 const aksjer = 'https://www.skatteetaten.no/deling/aksjonarregisteret/';
@@ -10,7 +10,7 @@ export const REGISTER_CATALOG = [
         description: 'Aksjeeiere, aksjeklasser og antall aksjer ved årsslutt.',
         origin: 'Aksjonærregisteret er en dokumentert norsk originalkilde for aksjeopplysninger. Roarings konkrete leverandør er ikke bekreftet i dokumentasjonen vi har undersøkt.',
         access: 'CSV-uttrekk bestilles hos Skatteetaten. Dette er en filutlevering, ikke et tilkoblet åpent oppslags-API.',
-        limitation: 'Årsdata per 31. desember. Indirekte eierkjeder og eierandeler må bearbeides separat.',
+        limitation: 'CSV-import gir årsdata per 31. desember. Roaring-alternativet henter eierstrukturen gjennom API.',
         links: [['Originalkilde og bestilling av CSV', aksjer]]
     },
     {
@@ -28,7 +28,7 @@ export const REGISTER_CATALOG = [
         description: 'Beregnet kontroll gjennom direkte og indirekte eierskap.',
         origin: 'Roaring beskriver versjon 1.0 som en beregning fra eierskap. Aksjonærregisteret er en mulig grunnlagskilde for en egen løsning; leverandørkjeden er ikke bekreftet.',
         access: 'Roaring-tjenesten krever egen API-tilgang. En egen beregning krever innhentede eierdata og en definert metode.',
-        limitation: 'Beregnet eierskap er et annet datagrunnlag enn innrapporterte rettighetshavere i det offisielle registeret.',
+        limitation: 'R-spørringen bruker Roarings beregnede produkt; dette er et annet datagrunnlag enn det offisielle registeret.',
         links: [['Mulig grunnlagskilde: Aksjonærregisteret', aksjer]]
     },
     {
@@ -46,16 +46,16 @@ export const REGISTER_CATALOG = [
         description: 'Virksomheter der en bestemt person er registrert med verv eller roller.',
         origin: 'Brønnøysundregistrene er originalkilde for registrerte roller. Roarings tjeneste tilbyr personoppslag; direkte tilsvarende offentlig API er ikke bekreftet her.',
         access: 'Brønnøysund tilbyr rollebestander gjennom abonnement. Personidentifikatorer og tilgang må avklares for valgt tjeneste.',
-        limitation: 'Prosjektet har allerede roller per virksomhet. Et personoppslag på tvers av virksomheter krever et eget datagrunnlag og sikker identifisering.',
+        limitation: 'R-spørringen henter personens verv fra Roaring. Åpne roller per virksomhet finnes også i Brønnøysund-kategorien.',
         links: [['Originalkilde: abonnement på rolleopplysninger', roller]]
     },
     {
         id: 'folkeregister', title: 'Folkeregisteropplysninger', coverage: 'missing', source: 'Skatteetaten · Folkeregisteret',
-        roaringName: 'Population Register', roaringUrl: 'https://developer.roaring.io/docs/apis?countries=no',
+        roaringName: 'Population Register', roaringUrl: roaring('no-person-2.0'),
         description: 'Registrerte personopplysninger, for eksempel navn, adresse og sivilstand, avhengig av rettighetspakke.',
         origin: 'Folkeregisteret forvaltes av Skatteetaten. Tilgang kan gis direkte eller gjennom en leverandør.',
         access: 'Virksomheten må søke om tilgang. Opplysningene kan hentes gjennom delingstjenestene eller oppslagstjenesten etter innvilgelse.',
-        limitation: 'Tilgjengelige felter bestemmes av rettighetspakken. Ingen personoppslag er koblet til denne nettsiden.',
+        limitation: 'Direkte R-oppslag støtter offentlig-med-hjemmel. Roaring kan velges som alternativ med nødvendig tilgang. Felter bestemmes av rettighetspakken.',
         links: [['Originalkilde og søknad om tilgang', 'https://www.skatteetaten.no/deling/folkeregisteret/intro/be-om-tilgang/'], ['Distribusjon og tilkobling', 'https://www.skatteetaten.no/nn/deling/folkeregisteret/distribusjonsmodell/']]
     },
     {
@@ -64,7 +64,7 @@ export const REGISTER_CATALOG = [
         description: 'Regelbaserte indikatorer fra virksomhetsopplysninger, endringer og økonomiske data.',
         origin: 'Roarings egen sammenstilling med regler og terskler. Dokumentasjonen identifiserer ikke en fullstendig originalkildeliste.',
         access: 'Krever API-tilgang og en risikomal hos Roaring. Grunnlagsdata alene gir ikke samme produkt.',
-        limitation: 'Prosjektet har enkelte relevante registerdata, men beregner ingen samlet risiko eller tilsvarende indikatorpakke.',
+        limitation: 'R-spørringen henter Roarings indikatorer med din risikomal; prosjektet foretar ingen egen risikoberegning.',
         links: [['Produktets metode og datatyper', roaring('no-company-risk-1.0')]]
     },
     {
@@ -82,7 +82,7 @@ export const REGISTER_CATALOG = [
         description: 'Lengre regnskapshistorikk og bearbeidede økonomiske nøkkeltall.',
         origin: 'Regnskapsregisteret er norsk originalkilde for innsendte årsregnskap. Roaring beskriver en utvidet tjeneste med fem års regnskap og nøkkeltall.',
         access: 'Prosjektets R-generator har åpne regnskapstall for siste tre regnskapsår og nedlasting av tilgjengelige PDF-kopier.',
-        limitation: 'Eldre PDF-kopier blir ikke automatisk til strukturerte tall. Fem års tall og Roarings beregnede nøkkeltall er ikke implementert.',
+        limitation: 'R-spørringen henter inntil fem års tall fra Roaring, avhengig av abonnement og tilgjengelige regnskap. Brønnøysund-kategorien har åpne tall og PDF-kopier.',
         links: [['Originalkilde: Regnskapsregisterets API', 'https://data.brreg.no/regnskapsregisteret/regnskap/v3/api-docs']]
     },
     {
@@ -91,7 +91,7 @@ export const REGISTER_CATALOG = [
         description: 'Næringer, sektor og virksomhetens formål og aktivitet, med eventuell historikk.',
         origin: 'Enhetsregisteret inneholder virksomhetsopplysninger; SSB vedlikeholder næringsstandarden. Roarings konkrete dataleveranser er ikke bekreftet felt for felt.',
         access: 'Virksomhetsoppslag og næringskodeverk finnes allerede i prosjektet gjennom åpne tjenester.',
-        limitation: 'Full feltlikhet og aktivitetshistorikk tilsvarende Roaring er ikke verifisert eller implementert.',
+        limitation: 'R-spørringen henter gjeldende aktivitet fra Roaring. Historiske aktivitetsoppslag inngår ikke i dette utvalget.',
         links: [['Originalkilde: Enhetsregisteret', 'https://data.brreg.no/enhetsregisteret/api/dokumentasjon/no/index.html'], ['Næringsstandard: SSB Klass', 'https://www.ssb.no/klass/klassifikasjoner/6']]
     }
 ];

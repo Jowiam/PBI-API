@@ -4,9 +4,45 @@ Kontrollert 20. november 2026 mot [Roarings API-katalog](https://developer.roari
 og kildedokumentasjonen lenket fra hver oppføring. Katalogen ligger i
 `js/lib/registerCatalog.mjs` og vises i en egen kategori i toppmenyen.
 
-Dette er en søkbar kildeoversikt over manglende og delvis dekkede tjenester.
-Ingen av de nye oppføringene er koblet til datahenting, forhåndsvisning eller
-kodegenerering. Katalogen lagrer bare beskrivelser og lenker.
+Kategorien er en R-spørringsbygger med ti datasett. Velg datasett, kilde og
+utvalg, og bruk **Lag R-kode**, **Kopier R-kode** eller **Last ned R-skript**.
+Koden ligger i `js/lib/registerR.mjs`. Data hentes når skriptet kjøres i R;
+nettsiden sender ikke oppslag eller tilgangsnøkler til leverandøren.
+
+## Kjøring i R
+
+API-skriptene krever `httr2` og `jsonlite`. Installer ved behov med
+`install.packages(c("httr2", "jsonlite"))`.
+
+- **Registrerte reelle rettighetshavere:** direkte GET-oppslag på
+  `https://rrh.brreg.no/api/oppslag/v1/virksomheter/{organisasjonsnummer}`.
+  Sett et gyldig Maskinporten-token i miljøvariabelen `BRREG_RRH_TOKEN`.
+  Roaring 2.0 er et eget alternativ i kildevelgeren.
+- **Folkeregisteret:** direkte entydig søk med fullt navn og identifikasjonsnummer,
+  for rettighetspakken `offentlig-med-hjemmel`. Sett et gyldig Maskinporten-token
+  i `FREG_TOKEN`. Andre rettighetspakker støttes ikke av det direkte oppslaget
+  her; Roaring har et alternativ som fortsatt krever riktig innvilget tilgang.
+- **Aksjonærer:** velg Skatteetaten for å lese en allerede bestilt CSV-fil med
+  R sin filvelger. Skilletegn og tegnsett velges i byggeren. Skriptet bestiller
+  ikke filen. Roaring kan velges for et API-oppslag på eierstruktur.
+- **Roaring:** sett `ROARING_CLIENT_ID` og `ROARING_CLIENT_SECRET` i R-miljøet.
+  Skriptet henter OAuth-token fra `https://api.roaring.io/token` med
+  `client_credentials` og Basic-autentisering, og bruker Bearer-token mot
+  produktets dokumenterte endepunkt. Kontoen må ha tilgang til produktet.
+  Risiko krever risikomal-ID; PEP-søk bruker Norge, fornavn og etternavn.
+
+Skriptene setter resultatet i `data` (data.frame). Hele JSON-svaret beholdes
+i `resultat`. Listebaserte produktresultater får én rad per element i produktets
+resultatliste; øvrige oppslag får én rad med flate objektfelter. Nøstede lister
+beholdes som JSON i cellene. Koder og originalverdier leses som tekst, og
+manglende felter blir `NA`. CSV-kolonner leses også som tekst.
+
+Dette er enkeltoppslag, ikke totale registeruttrekk. En respons med feltet
+`pagination` stopper med beskjed, slik at den ikke blir presentert som komplett.
+Ingen av skriptene gjør automatiske gjentatte kjøp/oppslag eller fornyer
+Maskinporten-token. HTTP-feil vises av httr2. Produktets øvrige statusopplysninger
+kan undersøkes i `resultat`. Faktiske tilgangsstyrte produksjonsoppslag kan ikke
+verifiseres uten brukerens tilganger.
 
 ## Kartlegging
 
