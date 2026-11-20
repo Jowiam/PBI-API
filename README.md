@@ -24,16 +24,6 @@ Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
 i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et og NVDB API Les V4 for vegobjekter. Verktøyet
 omfatter ikke alle datatjenestene fra Udir eller Statens vegvesen.
 
-## Eierskap, personer og risiko – R
-
-En egen kategori i toppmenyen samler ti datasett fra Roarings Norge-liste.
-Velg datasett, dataleverandør og utvalg, og bruk **Lag R-kode**, **Kopier R-kode**
-eller **Last ned R-skript**. Skriptene henter data når de kjøres i R/RStudio.
-Registrerte rettighetshavere og Folkeregisteret har direkte oppslag hos originalkilden
-med Maskinporten-token. Aksjonæruttrekk kan leses fra bestilt CSV.
-Roarings bearbeidede produkter krever egen API-tilgang; nøkler settes i R-miljøet.
-Se [R-integrasjonen](data/register/README.md) for tilgang, resultatform og avgrensninger.
-
 ## Kom i gang med Power BI
 
 1. Åpne [nettsiden](https://jowiam.github.io/PBI-API/) og velg datakilde i toppmenyen.

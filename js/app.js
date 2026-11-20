@@ -4,7 +4,6 @@ import { UdirBuilder } from './components/UdirBuilder.mjs';
 import { VegvesenBuilder } from './components/VegvesenBuilder.mjs';
 import { PolitietBuilder } from './components/PolitietBuilder.mjs';
 import { BrregBuilder } from './components/BrregBuilder.mjs';
-import { RegisterCatalog } from './components/RegisterCatalog.mjs';
 import { ProjectFooter } from './components/ProjectFooter.mjs';
 import { parseTableLabelsCSV } from './lib/csv.mjs';
 import { getTableLabel, getTableCategory, flattenCategories } from './lib/tableLabels.mjs';
@@ -373,8 +372,7 @@ function StatisticsApp() {
                 h('button', { type: 'button', 'aria-pressed': provider === 'udir', onClick: () => { setUdirOpened(true); setProvider('udir'); } }, 'Udir · Utdanning'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'vegvesen', onClick: () => { setVegvesenOpened(true); setProvider('vegvesen'); } }, 'Vegvesenet · Veg og trafikk'),
                 h('button', { type: 'button', 'aria-pressed': provider === 'politiet', onClick: () => { setPolitietOpened(true); setProvider('politiet'); } }, 'Politiet · Politiloggen'),
-                h('button', { type: 'button', 'aria-pressed': provider === 'brreg', onClick: () => { setBrregOpened(true); setProvider('brreg'); } }, 'Brønnøysund · Registerdata'),
-                h('button', { type: 'button', 'aria-pressed': provider === 'register', onClick: () => setProvider('register') }, 'Eierskap, personer og risiko')
+                h('button', { type: 'button', 'aria-pressed': provider === 'brreg', onClick: () => { setBrregOpened(true); setProvider('brreg'); } }, 'Brønnøysund · Registerdata')
             )
         ),
         h('div', { hidden: provider !== 'fhi' }, h(FHIQueryBuilder)),
@@ -383,7 +381,6 @@ function StatisticsApp() {
         vegvesenOpened && h('div', { hidden: provider !== 'vegvesen' }, h(VegvesenBuilder)),
         politietOpened && h('div', { hidden: provider !== 'politiet' }, h(PolitietBuilder)),
         brregOpened && h('div', { hidden: provider !== 'brreg' }, h(BrregBuilder)),
-        h('div', { hidden: provider !== 'register' }, h(RegisterCatalog)),
         h(ProjectFooter)
     );
 }
