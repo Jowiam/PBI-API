@@ -24,6 +24,14 @@ Udir-delen dekker de åtte tabellene fra Elevundersøkelsen som er tilgjengelige
 i denne integrasjonen. Vegvesenet-delen bruker Trafikkdata-API-et og NVDB API Les V4 for vegobjekter. Verktøyet
 omfatter ikke alle datatjenestene fra Udir eller Statens vegvesen.
 
+## Kildeoversikt: Eierskap, personer og risiko
+
+En egen kategori i toppmenyen samler ti oppføringer fra Roarings Norge-liste
+som prosjektet mangler eller bare dekker delvis. Den viser norske navn,
+originalkilder, dokumentasjon og tilgangsform. Du kan søke og filtrere på dekning.
+Dette er en kildeoversikt, uten datahenting eller kodeeksport for de nye tjenestene.
+Se [kildekartleggingen](data/register/README.md) for detaljer og avgrensninger.
+
 ## Kom i gang med Power BI
 
 1. Åpne [nettsiden](https://jowiam.github.io/PBI-API/) og velg datakilde i toppmenyen.
